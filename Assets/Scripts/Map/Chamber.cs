@@ -24,6 +24,7 @@ namespace Assets.Map {
         public static Chamber Random(System.Random rng, int maxX, int maxY, int minSize, int maxSize) {
             Assert.IsTrue(minSize > 0);
             Assert.IsTrue(maxSize > 0);
+            Assert.IsTrue(maxSize > minSize);
 
             int width = rng.Next(minSize, maxSize);
             int height = rng.Next(minSize, maxSize);
@@ -35,10 +36,10 @@ namespace Assets.Map {
         }
 
         public bool CollidesWith(Chamber other) {
-            return !(right <= other.left
-                     || left >= other.right
-                     || top <= other.bottom
-                     || bottom >= other.top);
+            return !(right <= other.left - 2
+                     || left >= other.right + 2
+                     || top <= other.bottom - 2
+                     || bottom >= other.top + 2);
         }
     }
 }

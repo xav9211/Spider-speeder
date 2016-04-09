@@ -118,7 +118,7 @@ public class Map: MonoBehaviour {
             tileTypes[i] = GameObject.Find("/Map/Tiles/" + Enum.GetNames(typeof(Tile.Type))[i]);
         }
 
-        System.Random rng = new System.Random(42);
+        System.Random rng = new System.Random(40);
         mapSize = new Point2i(100, 100);
 
         tiles = Generate(rng, mapSize.x, mapSize.y);
