@@ -93,7 +93,7 @@ public class PlayerControl: MonoBehaviour {
     Transform body;
     Transform camera;
     float angleRange = 90.0F;
-    float swingRange = 10.0F;
+    float swingRange = 10000000.0F;
 
     // Use this for initialization
     void Start() {
