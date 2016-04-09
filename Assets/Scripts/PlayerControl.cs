@@ -73,6 +73,11 @@ public class PlayerControl: MonoBehaviour {
         Move();
         camera.position = new Vector3(body.position.x, body.position.y, camera.position.z);
     }
+    
+    void Die()
+    {
+        Destroy(this.gameObject);
+    }
 
     void Move() {
         WebControl(KeyCode.Joystick1Button4, legs[Legs.TopLeft]);
@@ -113,6 +118,10 @@ public class PlayerControl: MonoBehaviour {
                 Vector2 pointingDirection = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
                 LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
                 RaycastHit2D hitInfo = Physics2D.Raycast(legTransform.position, pointingDirection, swingRange, layerMask);
+                if (hitInfo.collider.name == "Enemy")
+                {
+                    hitInfo.rigidbody.SendMessage("Die");
+                }
                 if (hitInfo.collider) {
                     SpringJoint2D spring = legObject.AddComponent<SpringJoint2D>();
                     spring.anchor.Set(0, 1);
