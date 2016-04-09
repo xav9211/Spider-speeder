@@ -9,6 +9,7 @@ class LegData
     public SpringJoint2D spring;
     public float lowerAngle;
     public float upperAngle;
+    public LineRenderer lr;
 
     public LegData(GameObject gameObject, float angleRange)
     {
@@ -16,6 +17,7 @@ class LegData
         this.lowerAngle = gameObject.transform.localEulerAngles.z - angleRange / 2.0F;
         this.upperAngle = gameObject.transform.localEulerAngles.z + angleRange / 2.0F;
         this.spring = null;
+        this.lr = gameObject.GetComponent<LineRenderer>();
     }
     
 }
@@ -62,7 +64,7 @@ public class PlayerControl : MonoBehaviour {
      */
     void MoveLeg(string inputAxis, LegData leg, float sensitivity, float inverse)
     {
-        if (System.Math.Abs(Input.GetAxis(inputAxis)) > 0)
+        if (!leg.spring && System.Math.Abs(Input.GetAxis(inputAxis)) > 0)
         {
             float force = Input.GetAxis(inputAxis);
             float angle = leg.gameObject.transform.localEulerAngles.z;
@@ -95,14 +97,24 @@ public class PlayerControl : MonoBehaviour {
                     spring.connectedAnchor = hitInfo.point;
                     leg.spring = spring;
                 }
+
+                leg.lr.enabled = true;
             }
         }else if (Input.GetKeyUp(key))
         {
             SpringJoint2D spring = leg.spring;
             if (spring)
             {
+                leg.lr.enabled = false;
                 Destroy(spring);
             }
+        }
+
+        if (leg.spring)
+        {
+            Vector2 v = leg.gameObject.transform.position + Quaternion.Euler(0, 0, leg.gameObject.transform.eulerAngles.z) * new Vector2(0, 0.5F);
+            leg.lr.SetPosition(0, v);
+            leg.lr.SetPosition(1, leg.spring.connectedAnchor);
         }
     }
 }
