@@ -41,5 +41,9 @@ namespace Assets.Map {
                      || top <= other.bottom - 2
                      || bottom >= other.top + 2);
         }
+
+        public bool Equals(Chamber chamber) {
+            return left == chamber.left && right == chamber.right && bottom == chamber.bottom && top == chamber.top;
+        }
     }
 }
