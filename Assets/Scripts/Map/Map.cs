@@ -94,8 +94,22 @@ public class Map: MonoBehaviour {
         return tiles;
     }
 
+    private Point2i mapSize;
     private Tile[,] tiles;
     private GameObject[] tileTypes;
+
+    // Returns a random tile that's not a wall
+    public Point2i GetSpiderStartPos() {
+        System.Random rng = new System.Random(42);
+        Point2i pos;
+
+        do {
+            pos.x = rng.Next(mapSize.x);
+            pos.y = rng.Next(mapSize.y);
+        } while (tiles[pos.x, pos.y].isOccupied);
+
+        return pos;
+    }
 
     // Use this for initialization
     void Start() {
@@ -105,7 +119,7 @@ public class Map: MonoBehaviour {
         }
 
         System.Random rng = new System.Random(42);
-        Point2i mapSize = new Point2i(100, 100);
+        mapSize = new Point2i(100, 100);
 
         tiles = Generate(rng, mapSize.x, mapSize.y);
 

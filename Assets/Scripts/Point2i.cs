@@ -1,7 +1,7 @@
 using System;
 
 namespace Assets {
-    struct Point2i {
+    public struct Point2i {
         public int x;
         public int y;
 
