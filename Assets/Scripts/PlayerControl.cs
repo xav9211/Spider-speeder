@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using Assets;
+using UnityEditor;
 
 enum Legs {
     TopRight, TopLeft, BotRight, BotLeft
@@ -31,6 +33,7 @@ public class PlayerControl: MonoBehaviour {
 
     Dictionary<Legs, LegData> legs;
     Transform body;
+    Transform camera;
     float angleRange = 90.0F;
     float swingRange = 100.0F;
 
@@ -51,17 +54,24 @@ public class PlayerControl: MonoBehaviour {
             }
         }
 
+        Map map = GameObject.Find("Map").GetComponent<Map>();
+        Point2i startPos = map.GetSpiderStartPos();
+
+        transform.position = new Vector3(startPos.x, startPos.y);
+        body = transform.Find("SpiderBody");
+        camera = transform.Find("Main Camera");
+
         legs = new Dictionary<Legs, LegData>();
         legs.Add(Legs.TopRight, new LegData(GameObject.Find("TopRightLeg"), angleRange));
         legs.Add(Legs.TopLeft, new LegData(GameObject.Find("TopLeftLeg"), angleRange));
         legs.Add(Legs.BotRight, new LegData(GameObject.Find("BotRightLeg"), angleRange));
         legs.Add(Legs.BotLeft, new LegData(GameObject.Find("BotLeftLeg"), angleRange));
-        body = transform.Find("SpiderBody");
     }
 
     // Update is called once per frame
     void Update() {
         Move();
+        camera.position = new Vector3(body.position.x, body.position.y, camera.position.z);
     }
     
     void Die()
