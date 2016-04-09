@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using Assets;
+using Assets.Map;
 using UnityEditor;
 
 enum Legs {
@@ -23,10 +25,66 @@ class LegData {
 
 }
 
+interface AnalogStick {
+    Vector2 Delta { get; }
+}
+
+class DefaultAnalogStick: AnalogStick {
+    private string axisStringH;
+    private string axisStringV;
+
+    public DefaultAnalogStick(int joyIndex,
+                              int axisIndex) {
+        axisStringH = "J" + joyIndex + "A" + axisIndex + "H";
+        axisStringV = "J" + joyIndex + "A" + axisIndex + "V";
+    }
+
+    public Vector2 Delta {
+        get {
+            return new Vector2(-Input.GetAxis(axisStringH),
+                               Input.GetAxis(axisStringV));
+        }
+    }
+}
+
+class XboxAnalogStick: AnalogStick {
+    private string axisStringH;
+    private string axisStringV;
+
+    public XboxAnalogStick(int joyIndex,
+                           int axisIndex) {
+        axisStringH = "XboxJ" + joyIndex + "A" + axisIndex + "H";
+        axisStringV = "XboxJ" + joyIndex + "A" + axisIndex + "V";
+    }
+
+    public Vector2 Delta {
+        get {
+            return new Vector2(-Input.GetAxis(axisStringH),
+                               -Input.GetAxis(axisStringV));
+        }
+    }
+}
+
 public class PlayerControl: MonoBehaviour {
-    struct LegAxisMapping {
-        public string leftLegAxis;
-        public string rightLegAxis;
+    class LegAxisMapping {
+        public AnalogStick LeftLeg { get; private set; }
+        public AnalogStick RightLeg { get; private set; }
+
+        private LegAxisMapping(AnalogStick leftLeg,
+                               AnalogStick rightLeg) {
+            LeftLeg = leftLeg;
+            RightLeg = rightLeg;
+        }
+
+        public static LegAxisMapping Default(int joyIndex) {
+            return new LegAxisMapping(new DefaultAnalogStick(joyIndex, 1),
+                                      new DefaultAnalogStick(joyIndex, 2));
+        }
+
+        public static LegAxisMapping Xbox(int joyIndex) {
+            return new LegAxisMapping(new DefaultAnalogStick(joyIndex, 1),
+                                      new XboxAnalogStick(joyIndex, 2));
+        }
     }
 
     private List<LegAxisMapping> axesMapping = new List<LegAxisMapping>();
@@ -35,22 +93,16 @@ public class PlayerControl: MonoBehaviour {
     Transform body;
     Transform camera;
     float angleRange = 90.0F;
-    float swingRange = 100.0F;
+    float swingRange = 10.0F;
 
     // Use this for initialization
     void Start() {
         var joystickNames = Input.GetJoystickNames();
         for (int i = 0; i < joystickNames.Length; ++i) {
             if (joystickNames[i].ToLower().Contains("xbox")) {
-                axesMapping.Add(new LegAxisMapping {
-                    leftLegAxis = string.Format("J{0}A1H", i + 1),
-                    rightLegAxis = string.Format("XboxJ{0}A2H", i + 1)
-                });
+                axesMapping.Add(LegAxisMapping.Xbox(i + 1));
             } else {
-                axesMapping.Add(new LegAxisMapping {
-                    leftLegAxis = string.Format("J{0}A1H", i + 1),
-                    rightLegAxis = string.Format("J{0}A2H", i + 1)
-                });
+                axesMapping.Add(LegAxisMapping.Default(i + 1));
             }
         }
 
@@ -86,26 +138,22 @@ public class PlayerControl: MonoBehaviour {
         WebControl(KeyCode.Joystick2Button5, legs[Legs.BotRight]);
 
         if (axesMapping.Count > 0) {
-            MoveLeg(axesMapping[0].leftLegAxis, legs[Legs.TopLeft], 3, 1);
-            MoveLeg(axesMapping[0].rightLegAxis, legs[Legs.TopRight], 3, 1);
+            MoveLeg(legs[Legs.TopLeft], axesMapping[0].LeftLeg.Delta);
+            MoveLeg(legs[Legs.TopRight], axesMapping[0].RightLeg.Delta);
 
             if (axesMapping.Count > 1) {
-                MoveLeg(axesMapping[1].leftLegAxis, legs[Legs.BotLeft], 3, -1);
-                MoveLeg(axesMapping[1].rightLegAxis, legs[Legs.BotRight], 3, -1);
+                MoveLeg(legs[Legs.BotLeft], axesMapping[1].LeftLeg.Delta);
+                MoveLeg(legs[Legs.BotRight], axesMapping[1].RightLeg.Delta);
             }
         }
     }
 
-    /**
-     * inverse should be either 1 or -1 
-     */
-    void MoveLeg(string inputAxis, LegData leg, float sensitivity, float inverse) {
-        if (!leg.spring && System.Math.Abs(Input.GetAxis(inputAxis)) > 0) {
-            float force = Input.GetAxis(inputAxis);
-            float angle = leg.gameObject.transform.localEulerAngles.z;
-            if ((inverse * force > 0 && angle - inverse * sensitivity * force > leg.lowerAngle) ||
-                (inverse * force < 0 && angle - inverse * sensitivity * force < leg.upperAngle))
-                leg.gameObject.transform.Rotate(new Vector3(0, 0, -inverse * sensitivity * force));
+    void MoveLeg(LegData leg,
+                 Vector2 delta) {
+        if (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f) {
+            float angle = (float)(Math.Atan2(delta.y, delta.x) * 180.0 / Math.PI);
+            angle += 90.0f;
+            leg.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
         }
     }
 

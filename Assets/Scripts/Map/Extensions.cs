@@ -24,6 +24,20 @@ namespace Assets.Map {
         }
     }
 
+    static class FloatExtensions {
+        public static float Clamp(this float val,
+                                  float min,
+                                  float max) {
+            if (val < min) {
+                return min;
+            } else if (val > max) {
+                return max;
+            } else {
+                return val;
+            }
+        }
+    }
+
     static class TileExtensions {
         public static Sprite ToSprite(this Tile tile, Point2i pos) {
             return Sprite.Create(
