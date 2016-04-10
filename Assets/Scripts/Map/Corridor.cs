@@ -24,9 +24,5 @@ namespace Assets.Map {
 
             return new Corridor(intermediatePoints);
         }
-
-        public bool Equal(Corridor corridor) {
-            return intermediatePoints[0] != corridor.intermediatePoints[0] && intermediatePoints[2] != corridor.intermediatePoints[2];
-        }
     }
 }
