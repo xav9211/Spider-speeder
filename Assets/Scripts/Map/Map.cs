@@ -40,16 +40,70 @@ public class Map: MonoBehaviour {
         return chambers;
     }
 
+    private bool CorridorColideWithChamber(Corridor corridor, Chamber src, Chamber dst, IList<Chamber> chambers)
+    {
+        Point2i start = corridor.intermediatePoints[0];
+        Point2i corner = corridor.intermediatePoints[1];
+        Point2i end = corridor.intermediatePoints[2];
+        foreach (var chamber in chambers)
+        {
+            if (!chamber.Equals(src) && !chamber.Equals(dst)) {
+                if (Point2i.InRange(corner.x, chamber.left, chamber.right)) {
+                    Point2i checkPoint = corner.y == start.y ? end : start;
+                    if (Point2i.InRange(chamber.bottom - 2, checkPoint.y, corner.y) || Point2i.InRange(chamber.top + 2, checkPoint.y, corner.y)) {
+                        return true;
+                    }
+                }
+
+                if (Point2i.InRange(corner.y, chamber.bottom, chamber.top)) {
+                    Point2i checkPoint = corner.x == start.x ? end : start;
+                    if (Point2i.InRange(chamber.left - 2, checkPoint.x, corner.x) || Point2i.InRange(chamber.right + 2, checkPoint.x, corner.x)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private IList<Corridor> CreateNewCorridors(System.Random rng, IList<Chamber> chambers) {
+        IList<Corridor> corridors = new List<Corridor>();
+        foreach (var chamber in chambers.Skip(1)) {
+            Chamber minChamber, minChamber2, minChamber3;
+            minChamber = minChamber2 = minChamber3 = chambers[0];
+            int minDelta, minDelta2, minDelta3;
+            minDelta = minDelta2 = minDelta3 = Math.Abs(chamber.center.x - minChamber.center.x) + Math.Abs(chamber.center.y - minChamber.center.y);
+            bool nothingFit = false;
+            foreach (var testChamber in chambers.Skip(1)) {
+                if (!testChamber.Equals(chamber) && !CorridorColideWithChamber(Corridor.JoiningChambers(rng, chamber, testChamber), chamber, testChamber, chambers)) {
+                    int testDelta = Math.Abs(chamber.center.x - testChamber.center.x) + Math.Abs(chamber.center.y - testChamber.center.y);
+                    if (minDelta > testDelta) {
+                        minChamber = testChamber;
+                        minDelta = testDelta;
+                    } else if (minDelta2 > testDelta) {
+                        minChamber2 = testChamber;
+                        minDelta2 = testDelta;
+                    } else if (minDelta3 > testDelta) {
+                        minChamber3 = testChamber;
+                        minDelta3 = testDelta;
+                    } else if (testChamber.Equals(chambers.Last())) {
+                        //nothingFit = true;
+                    }
+                }
+            }
+            if (!nothingFit) {
+                corridors.Add(Corridor.JoiningChambers(rng, chamber, minChamber));
+                corridors.Add(Corridor.JoiningChambers(rng, chamber, minChamber2));
+                corridors.Add(Corridor.JoiningChambers(rng, chamber, minChamber3));
+            }
+        }
+        return corridors;
+    }
+
     private IList<Corridor> GenerateCorridors(System.Random rng,
                                               IList<Chamber> chambers,
                                               int numExtraCorridors) {
-        IList<Corridor> corridors = new List<Corridor>();
-        for (int i = 1; i < chambers.Count; ++i) {
-            corridors.Add(Corridor.JoiningChambers(rng, chambers.RandomFromSlice(rng, 0, i), chambers[i]));
-        }
-        for (int i = 0; i < numExtraCorridors; ++i) {
-            corridors.Add(Corridor.JoiningChambers(rng, chambers.Random(rng), chambers.Random(rng)));
-        }
+        IList<Corridor> corridors = CreateNewCorridors(rng, chambers);
 
         return corridors;
     }
@@ -118,7 +172,7 @@ public class Map: MonoBehaviour {
             tileTypes[i] = GameObject.Find("/Map/Tiles/" + Enum.GetNames(typeof(Tile.Type))[i]);
         }
 
-        System.Random rng = new System.Random(42);
+        System.Random rng = new System.Random(40);
         mapSize = new Point2i(100, 100);
 
         tiles = Generate(rng, mapSize.x, mapSize.y);
