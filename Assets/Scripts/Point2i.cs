@@ -30,6 +30,22 @@ namespace Assets {
             return a.x == b.x && a.y == b.y;
         }
 
+        public static bool operator <=(Point2i a, Point2i b) {
+            return a.x <= b.x && a.y <= b.y;
+        }
+
+        public static bool operator >=(Point2i a, Point2i b) {
+            return a.x >= b.x && a.y >= b.y;
+        }
+
+        public static bool InRange(int check, int a, int b) {
+            if (a < b) {
+                return check >= a && check <= b;
+            } else {
+                return check <= a && check >= b;
+            }
+        }
+
         public override bool Equals(object obj) {
             if (obj == null || GetType() != obj.GetType()) {
                 return false;
