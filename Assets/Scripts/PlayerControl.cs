@@ -118,7 +118,7 @@ public class PlayerControl: MonoBehaviour {
                 Vector2 pointingDirection = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
                 LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
                 RaycastHit2D hitInfo = Physics2D.Raycast(legTransform.position, pointingDirection, swingRange, layerMask);
-                if (hitInfo.collider.name == "Enemy")
+                if (hitInfo.collider.name == "Enemy(Clone)")
                 {
                     hitInfo.rigidbody.SendMessage("Die");
                 }

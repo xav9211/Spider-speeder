@@ -183,6 +183,13 @@ public class Map: MonoBehaviour {
                 GameObject.Instantiate(tileTypes[(int)tile.type],
                                        new Vector3(x, y, 0.0f),
                                        Quaternion.identity);
+                if(tileTypes[(int)tile.type].gameObject.name == Enum.GetName(typeof(Tile.Type),Tile.Type.Chamber) && rng.Next(100) < 2)
+                {
+
+                    GameObject.Instantiate(GameObject.Find("Enemy"),
+                                           new Vector3(x, y, 0.0f),
+                                           Quaternion.identity);
+                }
             }
         }
     }

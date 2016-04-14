@@ -16,7 +16,7 @@ public class EnemyAI : MonoBehaviour
     void Update()
     {
         GameObject spider = GameObject.Find("SpiderBody");
-        if (spider != null)
+        if (spider != null && Vector3.Distance(spider.transform.position, transform.position) < 10)
         {
             GetComponent<Rigidbody2D>().velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
         } else
