@@ -35,11 +35,11 @@ namespace Assets.Map {
                                height);
         }
 
-        public bool CollidesWith(Chamber other) {
-            return !(right <= other.left - 2
-                     || left >= other.right + 2
-                     || top <= other.bottom - 2
-                     || bottom >= other.top + 2);
+        public bool CollidesWith(Chamber other, int minDist) {
+            return !(right <= other.left - minDist
+                     || left >= other.right + minDist
+                     || top <= other.bottom - minDist
+                     || bottom >= other.top + minDist);
         }
 
         public bool Equals(Chamber chamber) {

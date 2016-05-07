@@ -33,7 +33,7 @@ public class Map: MonoBehaviour {
         for (int i = 0; i < cfg.maxIterations && chambers.Count < cfg.numChambers; ++i) {
             Chamber newChamber = Chamber.Random(rng, cfg.mapSize.x, cfg.mapSize.y, cfg.minChamberSize, cfg.maxChamberSize);
 
-            if (!chambers.Any(c => c.CollidesWith(newChamber))) {
+            if (!chambers.Any(c => c.CollidesWith(newChamber, 5))) {
                 chambers.Add(newChamber);
             }
         }
@@ -129,9 +129,9 @@ public class Map: MonoBehaviour {
         Tile[,] tiles = Empty(width, height);
         ChamberGeneratorConfig chamberCfg = new ChamberGeneratorConfig() {
             mapSize = new Point2i(width, height),
-            minChamberSize = 5,
-            maxChamberSize = 10,
-            numChambers = width * height / 150,
+            minChamberSize = 10,
+            maxChamberSize = 20,
+            numChambers = width * height / 500,
             maxIterations = 10000
         };
         IList<Chamber> chambers = GenerateChambers(rng, chamberCfg);
@@ -146,11 +146,11 @@ public class Map: MonoBehaviour {
                 Point2i delta = pointer.DeltaTowards(dst);
                 Assert.IsTrue((delta.x == 0) || (delta.y == 0));
 
-                while (pointer != c.intermediatePoints[i + 1]) {
-                    tiles[pointer.x, pointer.y] = new Tile(Tile.Type.Corridor, false);
+                while (pointer != c.intermediatePoints[i + 1] + delta) {
+                    addTiles(tiles, pointer, delta);
                     pointer += delta;
                 }
-                tiles[pointer.x, pointer.y] = new Tile(Tile.Type.Corridor, false);
+                addTiles(tiles, pointer, delta);
             }
         }
 
@@ -163,6 +163,15 @@ public class Map: MonoBehaviour {
         }
 
         return tiles;
+    }
+
+    private void addTiles(Tile[,] tiles, Point2i pointer, Point2i delta) {
+        for (int j = -1; j <= 1; j++) {
+            if (delta.x == 0)
+                tiles[pointer.x + j, pointer.y] = new Tile(Tile.Type.Corridor, false);
+            else
+                tiles[pointer.x, pointer.y + j] = new Tile(Tile.Type.Corridor, false);
+        }
     }
 
     private Point2i mapSize;
