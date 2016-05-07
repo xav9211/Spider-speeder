@@ -45,5 +45,9 @@ namespace Assets.Map {
         public bool Equals(Chamber chamber) {
             return left == chamber.left && right == chamber.right && bottom == chamber.bottom && top == chamber.top;
         }
+
+        public override string ToString() {
+            return string.Format("{0}, {1}, {2}, {3}", left, bottom, right, top);
+        }
     }
 }

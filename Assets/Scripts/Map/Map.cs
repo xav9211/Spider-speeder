@@ -66,44 +66,61 @@ public class Map: MonoBehaviour {
         return false;
     }
 
-    private IList<Corridor> CreateNewCorridors(System.Random rng, IList<Chamber> chambers) {
-        IList<Corridor> corridors = new List<Corridor>();
-        foreach (var chamber in chambers.Skip(1)) {
-            Chamber minChamber, minChamber2, minChamber3;
-            minChamber = minChamber2 = minChamber3 = chambers[0];
-            int minDelta, minDelta2, minDelta3;
-            minDelta = minDelta2 = minDelta3 = Math.Abs(chamber.center.x - minChamber.center.x) + Math.Abs(chamber.center.y - minChamber.center.y);
-            bool nothingFit = false;
-            foreach (var testChamber in chambers.Skip(1)) {
-                if (!testChamber.Equals(chamber) && !CorridorColideWithChamber(Corridor.JoiningChambers(rng, chamber, testChamber), chamber, testChamber, chambers)) {
-                    int testDelta = Math.Abs(chamber.center.x - testChamber.center.x) + Math.Abs(chamber.center.y - testChamber.center.y);
-                    if (minDelta > testDelta) {
-                        minChamber = testChamber;
-                        minDelta = testDelta;
-                    } else if (minDelta2 > testDelta) {
-                        minChamber2 = testChamber;
-                        minDelta2 = testDelta;
-                    } else if (minDelta3 > testDelta) {
-                        minChamber3 = testChamber;
-                        minDelta3 = testDelta;
-                    } else if (testChamber.Equals(chambers.Last())) {
-                        //nothingFit = true;
-                    }
+    class Tree {
+        public List<Point2i> verticles = new List<Point2i>();
+        public List<Corridor> corridors = new List<Corridor>();
+
+        public static Tree Merge(Tree t1, Tree t2, Corridor corr) {
+            Tree tree = new Tree();
+            tree.verticles.AddRange(t1.verticles);
+            tree.verticles.AddRange(t2.verticles);
+            tree.corridors.AddRange(t1.corridors);
+            tree.corridors.AddRange(t2.corridors);
+            tree.corridors.Add(corr);
+            return tree;
+        }
+    }
+
+    private IList<Corridor> CorridorsByKruskal(System.Random rng, IList<Chamber> chambers) {
+        List<Tree> forest = new List<Tree>();
+
+        List<Corridor> corridors = new List<Corridor>();
+        for (int i = 0; i < chambers.Count; i++) {
+            for (int j = i + 1; j < chambers.Count; j++) {
+                if (!chambers[j].Equals(chambers[i])) {
+                    corridors.Add(Corridor.JoiningChambers(rng, chambers[i], chambers[j]));
                 }
             }
-            if (!nothingFit) {
-                corridors.Add(Corridor.JoiningChambers(rng, chamber, minChamber));
-                corridors.Add(Corridor.JoiningChambers(rng, chamber, minChamber2));
-                corridors.Add(Corridor.JoiningChambers(rng, chamber, minChamber3));
-            }
+            Tree t = new Tree();
+            t.verticles.Add(chambers[i].center);
+            forest.Add(t);
         }
-        return corridors;
+        corridors.Sort((x,y) => x.cost.CompareTo(y.cost));
+
+        int count = 0;
+        while (corridors.Count > 0) {
+            Corridor corr = corridors[count];
+            corridors.Remove(corr);
+
+            Tree t1 = forest.Find(x => x.verticles.Contains(corr.intermediatePoints[0]));
+            Tree t2 = forest.Find(x => x.verticles.Contains(corr.intermediatePoints[2]));
+
+            if (t1 == t2)
+                continue;
+
+            Tree tFinal = Tree.Merge(t1, t2, corr);
+            forest.Remove(t1);
+            forest.Remove(t2);
+            forest.Add(tFinal);
+        }
+
+        return forest.First().corridors;
     }
 
     private IList<Corridor> GenerateCorridors(System.Random rng,
                                               IList<Chamber> chambers,
                                               int numExtraCorridors) {
-        IList<Corridor> corridors = CreateNewCorridors(rng, chambers);
+        IList<Corridor> corridors = CorridorsByKruskal(rng, chambers);
 
         return corridors;
     }
