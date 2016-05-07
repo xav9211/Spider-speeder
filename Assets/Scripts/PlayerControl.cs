@@ -65,6 +65,36 @@ class XboxAnalogStick: AnalogStick {
     }
 }
 
+interface ControlScheme {
+    void MoveLeg(LegData leg,
+                 Vector2 delta);
+}
+
+class RotateControlScheme : ControlScheme {
+    public void MoveLeg(LegData leg,
+                        Vector2 delta) {
+        if (!leg.spring && delta.SqrMagnitude() > 0) {
+            float force = delta.x;
+            float sensitivity = 3;
+            float angle = leg.gameObject.transform.localEulerAngles.z;
+            if ((force > 0 && angle - sensitivity*force > leg.lowerAngle) ||
+                (force < 0 && angle - sensitivity*force < leg.upperAngle))
+                leg.gameObject.transform.Rotate(new Vector3(0, 0, -sensitivity*force));
+        }
+    }
+}
+
+class PointAtTargetControlScheme : ControlScheme {
+    public void MoveLeg(LegData leg,
+                        Vector2 delta) {
+        if (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f) {
+            float angle = (float)(Math.Atan2(delta.y, delta.x) * 180.0 / Math.PI);
+            angle += 90.0f;
+            leg.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
+        }
+    }
+}
+
 public class PlayerControl: MonoBehaviour {
     class LegAxisMapping {
         public AnalogStick LeftLeg { get; private set; }
@@ -88,6 +118,7 @@ public class PlayerControl: MonoBehaviour {
     }
 
     private List<LegAxisMapping> axesMapping = new List<LegAxisMapping>();
+    private List<ControlScheme> controlSchemes = new List<ControlScheme>();
 
     Dictionary<Legs, LegData> legs;
     Transform body;
@@ -101,8 +132,10 @@ public class PlayerControl: MonoBehaviour {
         for (int i = 0; i < joystickNames.Length; ++i) {
             if (joystickNames[i].ToLower().Contains("xbox")) {
                 axesMapping.Add(LegAxisMapping.Xbox(i + 1));
+                controlSchemes.Add(new PointAtTargetControlScheme());
             } else {
                 axesMapping.Add(LegAxisMapping.Default(i + 1));
+                controlSchemes.Add(new RotateControlScheme());
             }
         }
 
@@ -120,10 +153,27 @@ public class PlayerControl: MonoBehaviour {
         legs.Add(Legs.BotLeft, new LegData(GameObject.Find("BotLeftLeg"), angleRange));
     }
 
+    private void ToggleControlScheme(int playerIndex) {
+        if (controlSchemes[playerIndex] is RotateControlScheme) {
+            controlSchemes[playerIndex] = new PointAtTargetControlScheme();
+        } else {
+            controlSchemes[playerIndex] = new RotateControlScheme();
+        }
+    }
+
     // Update is called once per frame
     void Update() {
         Move();
         camera.position = new Vector3(body.position.x, body.position.y, camera.position.z);
+
+        // Button 7 == Start (Win/Lin), (Mac: D-pad left, lol)
+        // http://wiki.unity3d.com/index.php?title=Xbox360Controller
+        if (Input.GetKeyDown(KeyCode.Joystick1Button7)) {
+            ToggleControlScheme(0);
+        }
+        if (Input.GetKeyDown(KeyCode.Joystick2Button7)) {
+            ToggleControlScheme(1);
+        }
     }
     
     void Die()
@@ -138,12 +188,12 @@ public class PlayerControl: MonoBehaviour {
         WebControl(KeyCode.Joystick2Button5, legs[Legs.BotRight]);
 
         if (axesMapping.Count > 0) {
-            MoveLeg(legs[Legs.TopLeft], axesMapping[0].LeftLeg.Delta);
-            MoveLeg(legs[Legs.TopRight], axesMapping[0].RightLeg.Delta);
+            controlSchemes[0].MoveLeg(legs[Legs.TopLeft], axesMapping[0].LeftLeg.Delta);
+            controlSchemes[0].MoveLeg(legs[Legs.TopRight], axesMapping[0].RightLeg.Delta);
 
             if (axesMapping.Count > 1) {
-                MoveLeg(legs[Legs.BotLeft], axesMapping[1].LeftLeg.Delta);
-                MoveLeg(legs[Legs.BotRight], axesMapping[1].RightLeg.Delta);
+                controlSchemes[1].MoveLeg(legs[Legs.BotLeft], axesMapping[1].LeftLeg.Delta);
+                controlSchemes[1].MoveLeg(legs[Legs.BotRight], axesMapping[1].RightLeg.Delta);
             }
         }
     }
