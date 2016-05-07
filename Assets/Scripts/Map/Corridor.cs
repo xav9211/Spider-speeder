@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 
 namespace Assets.Map {
     internal struct Corridor {
         public readonly IList<Point2i> intermediatePoints;
+
+        public int cost { get { return Math.Abs(intermediatePoints[0].x - intermediatePoints[2].x) + Math.Abs(intermediatePoints[0].y - intermediatePoints[2].y); } }
 
         public Corridor(IList<Point2i> intermediatePoints) {
             this.intermediatePoints = intermediatePoints;
