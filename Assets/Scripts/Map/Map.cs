@@ -33,7 +33,7 @@ public class Map: MonoBehaviour {
         for (int i = 0; i < cfg.maxIterations && chambers.Count < cfg.numChambers; ++i) {
             Chamber newChamber = Chamber.Random(rng, cfg.mapSize.x, cfg.mapSize.y, cfg.minChamberSize, cfg.maxChamberSize);
 
-            if (!chambers.Any(c => c.CollidesWith(newChamber, 5))) {
+            if (!chambers.Any(c => c.CollidesWith(newChamber, 5)) && newChamber.IsNotBorder(this.mapSize)) {
                 chambers.Add(newChamber);
             }
         }
@@ -87,9 +87,7 @@ public class Map: MonoBehaviour {
         List<Corridor> corridors = new List<Corridor>();
         for (int i = 0; i < chambers.Count; i++) {
             for (int j = i + 1; j < chambers.Count; j++) {
-                if (!chambers[j].Equals(chambers[i])) {
-                    corridors.Add(Corridor.JoiningChambers(rng, chambers[i], chambers[j]));
-                }
+                corridors.Add(Corridor.JoiningChambers(rng, chambers[i], chambers[j]));
             }
             Tree t = new Tree();
             t.verticles.Add(chambers[i].center);
@@ -117,10 +115,41 @@ public class Map: MonoBehaviour {
         return forest.First().corridors;
     }
 
+    private void addRandomCorridors(System.Random rng, IList<Chamber> chambers, IList<Corridor> corridors, int maxRandRange) {
+        int iter = 0;
+        int chamberNr = 0;
+        while (iter < corridors.Count / 5) {
+            if (addedCorridor(rng, chambers, corridors, maxRandRange, chamberNr))
+                iter++;
+            chamberNr++;
+        }
+    }
+
+    private bool addedCorridor(System.Random rng, IList<Chamber> chambers, IList<Corridor> corridors, int maxRandRange, int firstChammber) {
+        for (int i = firstChammber; i < chambers.Count; i++) {
+            for (int j = i + 1; j < chambers.Count; j++) {
+                if (lessThanMaxRange(chambers[i], chambers[j], maxRandRange)) {
+                    Corridor corr = Corridor.JoiningChambers(rng, chambers[i], chambers[j]);
+                    if (!corridors.Contains(corr)) {
+                        corridors.Add(corr);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private bool lessThanMaxRange(Chamber ch1, Chamber ch2, int maxRange) {
+        return Math.Abs(ch1.center.x - ch2.center.x) < maxRange && Math.Abs(ch1.center.y - ch2.center.y) < maxRange;
+    }
+
     private IList<Corridor> GenerateCorridors(System.Random rng,
                                               IList<Chamber> chambers,
-                                              int numExtraCorridors) {
+                                              int numExtraCorridors,
+                                              int maxRandRange) {
         IList<Corridor> corridors = CorridorsByKruskal(rng, chambers);
+        addRandomCorridors(rng, chambers, corridors, maxRandRange);
 
         return corridors;
     }
@@ -135,7 +164,7 @@ public class Map: MonoBehaviour {
             maxIterations = 10000
         };
         IList<Chamber> chambers = GenerateChambers(rng, chamberCfg);
-        IList<Corridor> corridors = GenerateCorridors(rng, chambers, chambers.Count);
+        IList<Corridor> corridors = GenerateCorridors(rng, chambers, chambers.Count, 2*chamberCfg.maxChamberSize);
 
         foreach (Corridor c in corridors) {
             for (int i = 0; i < c.intermediatePoints.Count - 1; ++i) {
