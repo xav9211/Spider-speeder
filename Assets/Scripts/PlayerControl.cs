@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections.Generic;
 using Assets;
+using Assets.Map;
 using UnityEditor;
 
 enum Legs {
@@ -23,34 +25,117 @@ class LegData {
 
 }
 
+interface AnalogStick {
+    Vector2 Delta { get; }
+}
+
+class DefaultAnalogStick: AnalogStick {
+    private string axisStringH;
+    private string axisStringV;
+
+    public DefaultAnalogStick(int joyIndex,
+                              int axisIndex) {
+        axisStringH = "J" + joyIndex + "A" + axisIndex + "H";
+        axisStringV = "J" + joyIndex + "A" + axisIndex + "V";
+    }
+
+    public Vector2 Delta {
+        get {
+            return new Vector2(-Input.GetAxis(axisStringH),
+                               Input.GetAxis(axisStringV));
+        }
+    }
+}
+
+class XboxAnalogStick: AnalogStick {
+    private string axisStringH;
+    private string axisStringV;
+
+    public XboxAnalogStick(int joyIndex,
+                           int axisIndex) {
+        axisStringH = "XboxJ" + joyIndex + "A" + axisIndex + "H";
+        axisStringV = "XboxJ" + joyIndex + "A" + axisIndex + "V";
+    }
+
+    public Vector2 Delta {
+        get {
+            return new Vector2(-Input.GetAxis(axisStringH),
+                               -Input.GetAxis(axisStringV));
+        }
+    }
+}
+
+interface ControlScheme {
+    void MoveLeg(LegData leg,
+                 Vector2 delta);
+}
+
+class RotateControlScheme : ControlScheme {
+    public void MoveLeg(LegData leg,
+                        Vector2 delta) {
+        if (!leg.spring && delta.SqrMagnitude() > 0) {
+            float force = delta.x;
+            float sensitivity = 3;
+            float angle = leg.gameObject.transform.localEulerAngles.z;
+            if ((force > 0 && angle - sensitivity*force > leg.lowerAngle) ||
+                (force < 0 && angle - sensitivity*force < leg.upperAngle))
+                leg.gameObject.transform.Rotate(new Vector3(0, 0, -sensitivity*force));
+        }
+    }
+}
+
+class PointAtTargetControlScheme : ControlScheme {
+    public void MoveLeg(LegData leg,
+                        Vector2 delta) {
+        if (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f) {
+            float angle = (float)(Math.Atan2(delta.y, delta.x) * 180.0 / Math.PI);
+            angle += 90.0f;
+            leg.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
+        }
+    }
+}
+
 public class PlayerControl: MonoBehaviour {
-    struct LegAxisMapping {
-        public string leftLegAxis;
-        public string rightLegAxis;
+    class LegAxisMapping {
+        public AnalogStick LeftLeg { get; private set; }
+        public AnalogStick RightLeg { get; private set; }
+
+        private LegAxisMapping(AnalogStick leftLeg,
+                               AnalogStick rightLeg) {
+            LeftLeg = leftLeg;
+            RightLeg = rightLeg;
+        }
+
+        public static LegAxisMapping Default(int joyIndex) {
+            return new LegAxisMapping(new DefaultAnalogStick(joyIndex, 1),
+                                      new DefaultAnalogStick(joyIndex, 2));
+        }
+
+        public static LegAxisMapping Xbox(int joyIndex) {
+            return new LegAxisMapping(new DefaultAnalogStick(joyIndex, 1),
+                                      new XboxAnalogStick(joyIndex, 2));
+        }
     }
 
     private List<LegAxisMapping> axesMapping = new List<LegAxisMapping>();
+    private List<ControlScheme> controlSchemes = new List<ControlScheme>();
 
     Dictionary<Legs, LegData> legs;
     Transform body;
     Transform camera;
     float angleRange = 90.0F;
-    float swingRange = 100.0F;
+    float swingRange = 10000000.0F;
 
     // Use this for initialization
     void Start() {
         var joystickNames = Input.GetJoystickNames();
         for (int i = 0; i < joystickNames.Length; ++i) {
             if (joystickNames[i].ToLower().Contains("xbox")) {
-                axesMapping.Add(new LegAxisMapping {
-                    leftLegAxis = string.Format("J{0}A1H", i + 1),
-                    rightLegAxis = string.Format("XboxJ{0}A2H", i + 1)
-                });
+                axesMapping.Add(LegAxisMapping.Xbox(i + 1));
+                controlSchemes.Add(new PointAtTargetControlScheme());
             } else {
-                axesMapping.Add(new LegAxisMapping {
-                    leftLegAxis = string.Format("J{0}A1H", i + 1),
-                    rightLegAxis = string.Format("J{0}A2H", i + 1)
-                });
+                axesMapping.Add(LegAxisMapping.Default(i + 1));
+                controlSchemes.Add(new RotateControlScheme());
             }
         }
 
@@ -68,10 +153,27 @@ public class PlayerControl: MonoBehaviour {
         legs.Add(Legs.BotLeft, new LegData(GameObject.Find("BotLeftLeg"), angleRange));
     }
 
+    private void ToggleControlScheme(int playerIndex) {
+        if (controlSchemes[playerIndex] is RotateControlScheme) {
+            controlSchemes[playerIndex] = new PointAtTargetControlScheme();
+        } else {
+            controlSchemes[playerIndex] = new RotateControlScheme();
+        }
+    }
+
     // Update is called once per frame
     void Update() {
         Move();
         camera.position = new Vector3(body.position.x, body.position.y, camera.position.z);
+
+        // Button 7 == Start (Win/Lin), (Mac: D-pad left, lol)
+        // http://wiki.unity3d.com/index.php?title=Xbox360Controller
+        if (Input.GetKeyDown(KeyCode.Joystick1Button7)) {
+            ToggleControlScheme(0);
+        }
+        if (Input.GetKeyDown(KeyCode.Joystick2Button7)) {
+            ToggleControlScheme(1);
+        }
     }
     
     void Die()
@@ -86,26 +188,22 @@ public class PlayerControl: MonoBehaviour {
         WebControl(KeyCode.Joystick2Button5, legs[Legs.BotRight]);
 
         if (axesMapping.Count > 0) {
-            MoveLeg(axesMapping[0].leftLegAxis, legs[Legs.TopLeft], 3, 1);
-            MoveLeg(axesMapping[0].rightLegAxis, legs[Legs.TopRight], 3, 1);
+            controlSchemes[0].MoveLeg(legs[Legs.TopLeft], axesMapping[0].LeftLeg.Delta);
+            controlSchemes[0].MoveLeg(legs[Legs.TopRight], axesMapping[0].RightLeg.Delta);
 
             if (axesMapping.Count > 1) {
-                MoveLeg(axesMapping[1].leftLegAxis, legs[Legs.BotLeft], 3, -1);
-                MoveLeg(axesMapping[1].rightLegAxis, legs[Legs.BotRight], 3, -1);
+                controlSchemes[1].MoveLeg(legs[Legs.BotLeft], axesMapping[1].LeftLeg.Delta);
+                controlSchemes[1].MoveLeg(legs[Legs.BotRight], axesMapping[1].RightLeg.Delta);
             }
         }
     }
 
-    /**
-     * inverse should be either 1 or -1 
-     */
-    void MoveLeg(string inputAxis, LegData leg, float sensitivity, float inverse) {
-        if (!leg.spring && System.Math.Abs(Input.GetAxis(inputAxis)) > 0) {
-            float force = Input.GetAxis(inputAxis);
-            float angle = leg.gameObject.transform.localEulerAngles.z;
-            if ((inverse * force > 0 && angle - inverse * sensitivity * force > leg.lowerAngle) ||
-                (inverse * force < 0 && angle - inverse * sensitivity * force < leg.upperAngle))
-                leg.gameObject.transform.Rotate(new Vector3(0, 0, -inverse * sensitivity * force));
+    void MoveLeg(LegData leg,
+                 Vector2 delta) {
+        if (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f) {
+            float angle = (float)(Math.Atan2(delta.y, delta.x) * 180.0 / Math.PI);
+            angle += 90.0f;
+            leg.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
         }
     }
 
