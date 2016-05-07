@@ -1,9 +1,6 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
-using Assets;
-using Assets.Map;
-using UnityEditor;
 
 enum Legs {
     TopRight, TopLeft, BotRight, BotLeft
@@ -157,6 +154,7 @@ public class PlayerControl: MonoBehaviour {
 
     Dictionary<Legs, LegData> legs;
     Transform body;
+
     Transform camera;
 
     // Use this for initialization
@@ -172,20 +170,16 @@ public class PlayerControl: MonoBehaviour {
             }
         }
 
-        Map map = GameObject.Find("Map").GetComponent<Map>();
-        Point2i startPos = map.GetSpiderStartPos();
-
-        transform.position = new Vector3(startPos.x, startPos.y);
         body = transform.Find("SpiderBody");
         camera = transform.Find("Main Camera");
 
 		float angleRange = 180.0F;
 		float swingRange = 1000.0F;
         legs = new Dictionary<Legs, LegData>();
-		legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange, swingRange, 225.0F, 45.0F));
-		legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, GameObject.Find("TopLeftLeg"), angleRange, swingRange,-45.0F, -45.0F));
-		legs.Add(Legs.BotRight, new LegData(Legs.BotRight, GameObject.Find("BotRightLeg"), angleRange, swingRange, 135.0F, 135.0F));
-		legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, GameObject.Find("BotLeftLeg"), angleRange, swingRange, 45.0F, -135.0F));
+        legs.Add(Legs.TopRight, new LegData(Legs.TopRight, transform.FindChild("TopRightLeg").gameObject, angleRange, swingRange, 225.0F, 45.0F));
+        legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, transform.FindChild("TopLeftLeg").gameObject, angleRange, swingRange, -45.0F, -45.0F));
+		legs.Add(Legs.BotRight, new LegData(Legs.BotRight, transform.FindChild("BotRightLeg").gameObject, angleRange, swingRange, 135.0F, 135.0F));
+		legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, transform.FindChild("BotLeftLeg").gameObject, angleRange, swingRange, 45.0F, -135.0F));
     }
 
     private void ToggleControlScheme(int playerIndex) {
