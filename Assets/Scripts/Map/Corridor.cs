@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Assets.Map {
-    internal struct Corridor {
+    internal class Corridor {
         public readonly IList<Point2i> intermediatePoints;
 
         public int cost { get { return Math.Abs(intermediatePoints[0].x - intermediatePoints[2].x) + Math.Abs(intermediatePoints[0].y - intermediatePoints[2].y); } }
@@ -26,6 +26,19 @@ namespace Assets.Map {
             intermediatePoints.Add(dst.center);
 
             return new Corridor(intermediatePoints);
+        }
+
+        public override bool Equals(Object obj) {
+            if (obj == null || GetType() != obj.GetType()) {
+                return false;
+            }
+            Corridor corridor = (Corridor)obj;
+            return (this.intermediatePoints[0] == corridor.intermediatePoints[0] && this.intermediatePoints[2] == corridor.intermediatePoints[2])
+                || (this.intermediatePoints[0] == corridor.intermediatePoints[2] && this.intermediatePoints[2] == corridor.intermediatePoints[0]);
+        }
+
+        public override string ToString() {
+            return string.Format("{0}, {1}", intermediatePoints[0].ToString(), intermediatePoints[2].ToString());
         }
     }
 }

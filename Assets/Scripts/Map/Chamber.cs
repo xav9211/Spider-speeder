@@ -42,6 +42,10 @@ namespace Assets.Map {
                      || bottom >= other.top + minDist);
         }
 
+        public bool IsNotBorder(Point2i mapSize) {
+            return (left > 1 && right < mapSize.x - 2 && bottom > 1 && top < mapSize.y - 2);
+        }
+
         public bool Equals(Chamber chamber) {
             return left == chamber.left && right == chamber.right && bottom == chamber.bottom && top == chamber.top;
         }
