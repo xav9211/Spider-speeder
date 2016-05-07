@@ -3,7 +3,8 @@ namespace Assets.Map {
         public enum Type {
             Wall,
             Chamber,
-            Corridor
+            Corridor,
+            Exit
         }
 
         public Type type { get; private set; }
