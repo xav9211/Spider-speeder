@@ -204,7 +204,9 @@ public class PlayerControl: MonoBehaviour {
     
     void Die()
     {
+        GameObject.FindGameObjectWithTag("BackgroundMusic").GetComponent<AudioSource>().Stop();
         ExplosionFactory.Create(body.transform.position, 5.0f);
+
         Destroy(this.gameObject);
     }
 
