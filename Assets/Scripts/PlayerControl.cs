@@ -13,6 +13,7 @@ class LegData {
     public GameObject gameObject;
     public SpringJoint2D spring;
 	public LineRenderer lr;
+	public RaycastHit2D webHitInfo;
 	public Vector2 angleLimits; // ranges of leg movement x - lower limit, y -upper limit
 	public float currentAngle; // added because in unity angle 361degrees is saved as 1 degree (361 number is relevant)
 	public float swingRange; // range of the web
@@ -31,8 +32,8 @@ class LegData {
 		this.angleLimits = new Vector2 (currentAngle - angleRange / 2.0F, currentAngle + angleRange / 2.0F);
 		this.startMaxRange = startMaxRange;
 		this.arctanRotation = arctanRotation;
-        this.spring = null;
         this.lr = gameObject.GetComponent<LineRenderer>();
+		this.spring = null;
     }
 }
 
@@ -178,7 +179,7 @@ public class PlayerControl: MonoBehaviour {
         body = transform.Find("SpiderBody");
         camera = transform.Find("Main Camera");
 
-		float angleRange = 90.0F;
+		float angleRange = 180.0F;
 		float swingRange = 1000.0F;
         legs = new Dictionary<Legs, LegData>();
 		legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange, swingRange, 225.0F, 45.0F));
@@ -248,6 +249,7 @@ public class PlayerControl: MonoBehaviour {
 
 					// if out leg is inside the wall don't create spring
 					if (!legEnd.Equals (hitInfo.point)) {
+						leg.webHitInfo = hitInfo;
 						SpringJoint2D spring = legObject.AddComponent<SpringJoint2D> ();
 						spring.autoConfigureDistance = false;
 						spring.distance = 0;
@@ -273,11 +275,28 @@ public class PlayerControl: MonoBehaviour {
         } else if (Input.GetKeyUp(key)) {
 			leg.lr.enabled = false;
             SpringJoint2D spring = leg.spring;
-            if (spring) 
-                Destroy(spring);
+			if (spring) {
+				Destroy (spring);
+				leg.webHitInfo = new RaycastHit2D();
+			}
         }
 
 		if (leg.lr.enabled) {
+			if (leg.webHitInfo.collider && !leg.webHitInfo.collider.name.ToLower().Contains("enemy")) { // if we're connected to (not enemy)
+				// shoot ray again to check if the string should be destroyed
+				LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
+				Transform legTransform = leg.gameObject.transform;
+				Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
+				RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, leg.webHitInfo.point - legEnd, leg.swingRange, layerMask);
+				if (!(hitInfo.point == leg.webHitInfo.point)) {
+					leg.lr.enabled = false;
+					SpringJoint2D spring = leg.spring;
+					Destroy (spring);
+					leg.webHitInfo = new RaycastHit2D();
+					return;
+				}
+			}
+				
 			Vector2 legTip = leg.gameObject.transform.position + Quaternion.Euler(0, 0, leg.gameObject.transform.eulerAngles.z) * new Vector2(0, leg.height);
 			if (leg.swingCollision) {
 				leg.lr.SetPosition (0, legTip);
