@@ -53,5 +53,9 @@ namespace Assets.Map {
         public override string ToString() {
             return string.Format("{0}, {1}, {2}, {3}", left, bottom, right, top);
         }
+
+        public bool Contains(Point2i point) {
+            return this.left <= point.x && point.x <= this.right && this.bottom <= point.y && point.y <= this.top;
+        }
     }
 }
