@@ -12,17 +12,21 @@ class LegData {
     public Legs legPos;
     public GameObject gameObject;
     public SpringJoint2D spring;
+	public LineRenderer lr;
 	public Vector2 angleLimits; // ranges of leg movement x - lower limit, y -upper limit
 	public float currentAngle; // added because in unity angle 361degrees is saved as 1 degree (361 number is relevant)
-	public readonly float startMaxRange; // beggining value (in degrees) of maximum possible range
-	public readonly float arctanRotation; //rotation value (in degrees) which should be performed for proper arctan values
-    public LineRenderer lr;
+	public float swingRange; // range of the web
+	public bool swingCollision = false;
 	public float height = 0.5F; //leg size
 	public float maxFrameDeltaAngle = 5.0F; // by how many degrees can leg change in single frame
 
-	public LegData(Legs legPos, GameObject gameObject, float angleRange, float startMaxRange, float arctanRotation) {
+	public readonly float startMaxRange; // beggining value (in degrees) of maximum possible range
+	public readonly float arctanRotation; //rotation value (in degrees) which should be performed for proper arctan values
+
+	public LegData(Legs legPos, GameObject gameObject, float angleRange, float swingRange, float startMaxRange, float arctanRotation) {
         this.legPos = legPos;
         this.gameObject = gameObject;
+		this.swingRange = swingRange;
 		this.currentAngle = gameObject.transform.localEulerAngles.z;
 		this.angleLimits = new Vector2 (currentAngle - angleRange / 2.0F, currentAngle + angleRange / 2.0F);
 		this.startMaxRange = startMaxRange;
@@ -101,9 +105,9 @@ class PointAtTargetControlScheme : ControlScheme {
 		if (!leg.spring && (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f)) {
 			delta = Quaternion.Euler (0, 0, leg.arctanRotation) * (-delta);
 			float diffAngle = Mathf.Rad2Deg * Mathf.Atan2(delta.y, delta.x);
-			if (diffAngle < 0) {
+			if (diffAngle < 0)
 				diffAngle = diffAngle < -90.0F ? 180.0F : 0.0F;
-			}
+			
 
 			diffAngle = (leg.startMaxRange + diffAngle) - leg.currentAngle;
 			if (Mathf.Abs(diffAngle) > leg.maxFrameDeltaAngle)
@@ -153,8 +157,6 @@ public class PlayerControl: MonoBehaviour {
     Dictionary<Legs, LegData> legs;
     Transform body;
     Transform camera;
-    float angleRange = 90.0F;
-    float swingRange = 10000000.0F;
 
     // Use this for initialization
     void Start() {
@@ -176,11 +178,13 @@ public class PlayerControl: MonoBehaviour {
         body = transform.Find("SpiderBody");
         camera = transform.Find("Main Camera");
 
+		float angleRange = 90.0F;
+		float swingRange = 1000.0F;
         legs = new Dictionary<Legs, LegData>();
-        legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange, 225.0F, 45.0F));
-        legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, GameObject.Find("TopLeftLeg"), angleRange, -45.0F, -45.0F));
-		legs.Add(Legs.BotRight, new LegData(Legs.BotRight, GameObject.Find("BotRightLeg"), angleRange, 135.0F, 135.0F));
-		legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, GameObject.Find("BotLeftLeg"), angleRange, 45.0F, -135.0F));
+		legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange, swingRange, 225.0F, 45.0F));
+		legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, GameObject.Find("TopLeftLeg"), angleRange, swingRange,-45.0F, -45.0F));
+		legs.Add(Legs.BotRight, new LegData(Legs.BotRight, GameObject.Find("BotRightLeg"), angleRange, swingRange, 135.0F, 135.0F));
+		legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, GameObject.Find("BotLeftLeg"), angleRange, swingRange, 45.0F, -135.0F));
     }
 
     private void ToggleControlScheme(int playerIndex) {
@@ -233,39 +237,55 @@ public class PlayerControl: MonoBehaviour {
             if (!leg.spring) {
                 GameObject legObject = leg.gameObject;
                 Transform legTransform = legObject.transform;
-                float angle = -(Mathf.PI / 180) * legTransform.transform.eulerAngles.z;
-                Vector2 pointingDirection = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
-                LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
-                RaycastHit2D hitInfo = Physics2D.Raycast(legTransform.position, pointingDirection, swingRange, layerMask);
-                if (hitInfo.collider.name == "Enemy(Clone)")
-                {
-                    hitInfo.rigidbody.SendMessage("Die");
-                }
-                if (hitInfo.collider) {
-                    SpringJoint2D spring = legObject.AddComponent<SpringJoint2D>();
-                    spring.anchor.Set(0, 1);
-                    spring.autoConfigureDistance = false;
-                    spring.distance = 0;
-                    spring.dampingRatio = 0.9F;
-                    spring.frequency = 0.3F;
-                    spring.connectedAnchor = hitInfo.point;
-                    leg.spring = spring;
-                }
+				LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
+				// shoot web from the tip of the leg
+				Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
+				RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
+				if (hitInfo.collider) {
+					if (hitInfo.collider.name == "Enemy(Clone)") {
+						hitInfo.rigidbody.SendMessage ("Die");
+					}
 
-                leg.lr.enabled = true;
+					// if out leg is inside the wall don't create spring
+					if (!legEnd.Equals (hitInfo.point)) {
+						SpringJoint2D spring = legObject.AddComponent<SpringJoint2D> ();
+						spring.autoConfigureDistance = false;
+						spring.distance = 0;
+						spring.dampingRatio = 0.9F;
+						spring.frequency = 0.3F;
+						// it should be up because joint start should be attached to the tip of the leg, but due to
+						// hingejoint bugs its atm connected to the body
+						spring.anchor = Vector2.zero;
+						spring.connectedAnchor = hitInfo.point;
+						leg.spring = spring;
+						leg.swingCollision = true;
+						leg.lr.SetPosition (1, leg.spring.connectedAnchor);
+						leg.lr.enabled = true;
+					}
+				} else {
+					// did not hit anything, change web color to red with the end at the maximum range
+					leg.swingCollision = false;
+					Vector2 reachedPoint = legTransform.position + legTransform.up * (leg.height + leg.swingRange);
+					leg.lr.SetPosition (1, reachedPoint);
+					leg.lr.enabled = true;
+				}
             }
         } else if (Input.GetKeyUp(key)) {
+			leg.lr.enabled = false;
             SpringJoint2D spring = leg.spring;
-            if (spring) {
-                leg.lr.enabled = false;
+            if (spring) 
                 Destroy(spring);
-            }
         }
 
-        if (leg.spring) {
-            Vector2 v = leg.gameObject.transform.position + Quaternion.Euler(0, 0, leg.gameObject.transform.eulerAngles.z) * new Vector2(0, 0.5F);
-            leg.lr.SetPosition(0, v);
-            leg.lr.SetPosition(1, leg.spring.connectedAnchor);
+		if (leg.lr.enabled) {
+			Vector2 legTip = leg.gameObject.transform.position + Quaternion.Euler(0, 0, leg.gameObject.transform.eulerAngles.z) * new Vector2(0, leg.height);
+			if (leg.swingCollision) {
+				leg.lr.SetPosition (0, legTip);
+				leg.lr.SetColors (Color.white, Color.white);
+			} else {
+				leg.lr.SetColors (Color.red, Color.red);
+				leg.lr.SetPosition (0, legTip);
+			}
         }
     }
 }
