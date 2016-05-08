@@ -24,8 +24,14 @@ namespace Assets {
             shaker.Shake(force);
         }
 
+        private static void PlaySound(Vector3 position) {
+            AudioClip sound = (AudioClip)Resources.Load("Explosion", typeof(AudioClip));
+            AudioSource.PlayClipAtPoint(sound, position, 0.5f);
+        }
+
         public static GameObject Create(Vector2 position,
                                         float force = 1.0f) {
+            PlaySound(position);
             ShakeScreen(Mathf.Sqrt(force));
             return CreateParticleSystem(position, force * 0.1f);
         }
