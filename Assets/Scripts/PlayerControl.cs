@@ -9,20 +9,21 @@ enum Legs {
     TopRight, TopLeft, BotRight, BotLeft
 };
 class LegData {
+    public Legs legPos;
     public GameObject gameObject;
     public SpringJoint2D spring;
     public float lowerAngle;
     public float upperAngle;
     public LineRenderer lr;
 
-    public LegData(GameObject gameObject, float angleRange) {
+    public LegData(Legs legPos, GameObject gameObject, float angleRange) {
+        this.legPos = legPos;
         this.gameObject = gameObject;
         this.lowerAngle = gameObject.transform.localEulerAngles.z - angleRange / 2.0F;
         this.upperAngle = gameObject.transform.localEulerAngles.z + angleRange / 2.0F;
         this.spring = null;
         this.lr = gameObject.GetComponent<LineRenderer>();
     }
-
 }
 
 interface AnalogStick {
@@ -73,8 +74,12 @@ interface ControlScheme {
 class RotateControlScheme : ControlScheme {
     public void MoveLeg(LegData leg,
                         Vector2 delta) {
+        bool isTopLeg = leg.legPos == Legs.TopLeft
+                        || leg.legPos == Legs.TopRight;
+        float inverse = isTopLeg ? -1.0f : 1.0f;
+
         if (!leg.spring && delta.SqrMagnitude() > 0) {
-            float force = delta.x;
+            float force = delta.x * inverse;
             float sensitivity = 3;
             float angle = leg.gameObject.transform.localEulerAngles.z;
             if ((force > 0 && angle - sensitivity*force > leg.lowerAngle) ||
@@ -147,10 +152,10 @@ public class PlayerControl: MonoBehaviour {
         camera = transform.Find("Main Camera");
 
         legs = new Dictionary<Legs, LegData>();
-        legs.Add(Legs.TopRight, new LegData(GameObject.Find("TopRightLeg"), angleRange));
-        legs.Add(Legs.TopLeft, new LegData(GameObject.Find("TopLeftLeg"), angleRange));
-        legs.Add(Legs.BotRight, new LegData(GameObject.Find("BotRightLeg"), angleRange));
-        legs.Add(Legs.BotLeft, new LegData(GameObject.Find("BotLeftLeg"), angleRange));
+        legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange));
+        legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, GameObject.Find("TopLeftLeg"), angleRange));
+        legs.Add(Legs.BotRight, new LegData(Legs.BotRight, GameObject.Find("BotRightLeg"), angleRange));
+        legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, GameObject.Find("BotLeftLeg"), angleRange));
     }
 
     private void ToggleControlScheme(int playerIndex) {
