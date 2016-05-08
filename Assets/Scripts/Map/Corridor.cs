@@ -37,6 +37,10 @@ namespace Assets.Map {
                 || (this.intermediatePoints[0] == corridor.intermediatePoints[2] && this.intermediatePoints[2] == corridor.intermediatePoints[0]);
         }
 
+        public override int GetHashCode() {
+            throw new NotImplementedException();
+        }
+
         public override string ToString() {
             return string.Format("{0}, {1}", intermediatePoints[0].ToString(), intermediatePoints[2].ToString());
         }

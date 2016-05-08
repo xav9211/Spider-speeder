@@ -239,7 +239,12 @@ public class Map: MonoBehaviour {
 
     public GameObject Player { get; private set; }
     public GameObject PlayerBody {
-        get { return Player.transform.FindChild("SpiderBody").gameObject; }
+        get {
+            if (Player == null) {
+                return null;
+            }
+            return Player.transform.FindChild("SpiderBody").gameObject;
+        }
     }
 
     // Returns a random tile that's not a wall

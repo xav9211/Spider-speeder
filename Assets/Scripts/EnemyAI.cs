@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets;
 
 public class EnemyAI : MonoBehaviour
 {
@@ -32,6 +33,7 @@ public class EnemyAI : MonoBehaviour
         lifeBar.transform.localScale -= Vector3.up*0.1F;
         if(lifeBar.transform.localScale.y < 0.1)
         {
+            ExplosionFactory.Create(transform.position, 1.0f);
             Destroy(this.gameObject);
         }
         
