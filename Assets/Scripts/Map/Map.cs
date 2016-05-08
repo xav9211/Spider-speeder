@@ -11,6 +11,8 @@ using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class Map: MonoBehaviour {
+    private Chamber startChamber;
+
     private Tile[,] Empty(int width, int height) {
         Tile[,] tiles = new Tile[width, height];
         for (int y = 0; y < height; ++y) {
@@ -33,11 +35,17 @@ public class Map: MonoBehaviour {
     private IList<Chamber> GenerateChambers(System.Random rng,
                                             ChamberGeneratorConfig cfg) {
         IList<Chamber> chambers = new List<Chamber>();
+        startChamber = new Chamber(0, 0, cfg.maxChamberSize + 1, cfg.maxChamberSize + 1);
+
         for (int i = 0; i < cfg.maxIterations && chambers.Count < cfg.numChambers; ++i) {
             Chamber newChamber = Chamber.Random(rng, cfg.mapSize.x, cfg.mapSize.y, cfg.minChamberSize, cfg.maxChamberSize);
 
             if (!chambers.Any(c => c.CollidesWith(newChamber, 5)) && newChamber.IsNotBorder(this.mapSize)) {
                 chambers.Add(newChamber);
+
+                if (newChamber.height + newChamber.width < startChamber.height + startChamber.width) {
+                    startChamber = newChamber;
+                }
             }
         }
         return chambers;
@@ -196,7 +204,11 @@ public class Map: MonoBehaviour {
             }
         }
 
-        Point2i exitPos = chamberTiles.Random(rng);
+        Point2i exitPos;
+        do {
+            exitPos = chamberTiles.Random(rng);
+        } while (startChamber.Contains(exitPos));
+        
         tiles[exitPos.x, exitPos.y] = new Tile(Tile.Type.Exit, true);
 
         return tiles;
@@ -235,8 +247,8 @@ public class Map: MonoBehaviour {
         Point2i pos;
 
         do {
-            pos.x = rng.Next(mapSize.x);
-            pos.y = rng.Next(mapSize.y);
+            pos.x = rng.Next(startChamber.left, startChamber.right);
+            pos.y = rng.Next(startChamber.bottom, startChamber.top);
         } while (tiles[pos.x, pos.y].isOccupied);
 
         return pos;
@@ -288,9 +300,9 @@ public class Map: MonoBehaviour {
                 GameObject.Instantiate(tilesets[tile.type].Random(rng),
                                        new Vector3(x, y, 0.0f),
                                        Quaternion.identity);
-                if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2)
+                if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 && !startChamber.Contains(new Point2i(x, y)))
                 {
-                    GameObject.Instantiate(GameObject.Find("Enemy"),
+                    GameObject.Instantiate(Resources.Load<Object>("Enemy"),
                                            new Vector3(x, y, 0.0f),
                                            Quaternion.identity);
                 }
