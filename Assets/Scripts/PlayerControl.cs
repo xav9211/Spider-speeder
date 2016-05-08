@@ -156,8 +156,6 @@ public class PlayerControl: MonoBehaviour {
     Dictionary<Legs, LegData> legs;
     Transform body;
 
-    Transform camera;
-
     // Use this for initialization
     void Start() {
         var joystickNames = Input.GetJoystickNames();

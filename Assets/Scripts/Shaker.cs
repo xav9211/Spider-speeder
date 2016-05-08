@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 public class Shaker : MonoBehaviour {
-    private Camera camera;
+    private new Camera camera;
     private float shake = 0.0f;
     private float shakeTime = 1.0f;
     private float shakeAmount = 0.7f;
