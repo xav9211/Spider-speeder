@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using Assets;
 
 enum Legs {
     TopRight, TopLeft, BotRight, BotLeft
@@ -171,7 +172,6 @@ public class PlayerControl: MonoBehaviour {
         }
 
         body = transform.Find("SpiderBody");
-        camera = transform.Find("Main Camera");
 
 		float angleRange = 180.0F;
 		float swingRange = 1000.0F;
@@ -193,7 +193,6 @@ public class PlayerControl: MonoBehaviour {
     // Update is called once per frame
     void Update() {
         Move();
-        camera.position = new Vector3(body.position.x, body.position.y, camera.position.z);
 
         // Button 7 == Start (Win/Lin), (Mac: D-pad left, lol)
         // http://wiki.unity3d.com/index.php?title=Xbox360Controller
@@ -207,6 +206,7 @@ public class PlayerControl: MonoBehaviour {
     
     void Die()
     {
+        ExplosionFactory.Create(body.transform.position, 5.0f);
         Destroy(this.gameObject);
     }
 

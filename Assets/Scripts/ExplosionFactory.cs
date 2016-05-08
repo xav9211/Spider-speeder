@@ -2,10 +2,8 @@
 
 namespace Assets {
     public class ExplosionFactory {
-        public static GameObject Create(Vector2 position,
-                                        float force = 1.0f) {
-            force *= 0.1f;
-
+        private static GameObject CreateParticleSystem(Vector2 position,
+                                                       float force) {
             var explosion = (GameObject)GameObject.Instantiate(Resources.Load("Explosion"),
                                                                new Vector3(position.x, position.y),
                                                                Quaternion.identity);
@@ -18,6 +16,18 @@ namespace Assets {
             system.startSize = Mathf.Max(1.0f, force);
 
             return explosion;
+        }
+
+        private static void ShakeScreen(float force) {
+            GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
+            Shaker shaker = camera.GetComponent<Shaker>();
+            shaker.Shake(force);
+        }
+
+        public static GameObject Create(Vector2 position,
+                                        float force = 1.0f) {
+            ShakeScreen(Mathf.Sqrt(force));
+            return CreateParticleSystem(position, force * 0.1f);
         }
     }
 }
