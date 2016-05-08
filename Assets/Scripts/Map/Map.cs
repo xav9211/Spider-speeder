@@ -318,6 +318,11 @@ public class Map: MonoBehaviour {
         Player = (GameObject)Instantiate(Resources.Load<Object>("Spider"),
                                          new Vector3(spiderStartPos.x, spiderStartPos.y),
                                          Quaternion.identity);
+
+        AudioSource bgMusicSource = GameObject.FindGameObjectWithTag("BackgroundMusic").GetComponent<AudioSource>();
+        if (!bgMusicSource.isPlaying) {
+            bgMusicSource.Play();
+        }
     }
 
     // Use this for initialization
