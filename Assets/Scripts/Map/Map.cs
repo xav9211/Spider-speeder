@@ -4,8 +4,10 @@ using System.Linq;
 using System.Security.Policy;
 using Assets;
 using Assets.Map;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class Map: MonoBehaviour {
@@ -184,13 +186,18 @@ public class Map: MonoBehaviour {
             }
         }
 
+        List<Point2i> chamberTiles = new List<Point2i>();
         foreach (Chamber c in chambers) {
             for (int y = c.bottom; y < c.top; ++y) {
                 for (int x = c.left; x < c.right; ++x) {
                     tiles[x, y] = new Tile(Tile.Type.Chamber, false);
+                    chamberTiles.Add(new Point2i(x, y));
                 }
             }
         }
+
+        Point2i exitPos = chamberTiles.Random(rng);
+        tiles[exitPos.x, exitPos.y] = new Tile(Tile.Type.Exit, true);
 
         return tiles;
     }
@@ -208,6 +215,20 @@ public class Map: MonoBehaviour {
     private Tile[,] tiles;
     private Dictionary<Tile.Type, List<GameObject>> tilesets;
     private System.Random rng;
+
+    private int level = -1;
+    public int Level {
+        get { return level; }
+        private set {
+            level = value;
+            GameObject.Find("/Canvas/LevelText").GetComponent<Text>().text = "Level: " + level;
+        }
+    }
+
+    public GameObject Player { get; private set; }
+    public GameObject PlayerBody {
+        get { return Player.transform.FindChild("SpiderBody").gameObject; }
+    }
 
     // Returns a random tile that's not a wall
     public Point2i GetSpiderStartPos() {
@@ -228,7 +249,8 @@ public class Map: MonoBehaviour {
             Tile.Type type;
             try {
                 type = (Tile.Type) Enum.Parse(typeof (Tile.Type), tilesetObject.name);
-            } catch (ArgumentException) {
+            }
+            catch (ArgumentException) {
                 Debug.LogWarningFormat("{0} is not a valid Tile.Type; either add Tile.Type enum value "
                                        + "with that name or remove the 'Tileset' tag from the object",
                                        tilesetObject.name);
@@ -241,16 +263,23 @@ public class Map: MonoBehaviour {
             }
             tilesets.Add(type, tileset);
         }
-
         return tilesets;
     }
 
-    // Use this for initialization
-    void Start() {
-        tilesets = LoadTilesets();
-        rng = new System.Random(0);
-        mapSize = new Point2i(100, 100);
+    private void ClearClones() {
+        foreach (var obj in GameObject.FindObjectsOfType<GameObject>()) {
+            if (obj.name.EndsWith("(Clone)")) {
+                Destroy(obj);
+            }
+        }
+    }
 
+    internal void Regenerate(int level) {
+        Level = level;
+
+        ClearClones();
+
+        mapSize = new Point2i(100, 100);
         tiles = Generate(rng, mapSize.x, mapSize.y);
 
         for (int y = 0; y < mapSize.y; ++y) {
@@ -261,13 +290,27 @@ public class Map: MonoBehaviour {
                                        Quaternion.identity);
                 if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2)
                 {
-
                     GameObject.Instantiate(GameObject.Find("Enemy"),
                                            new Vector3(x, y, 0.0f),
                                            Quaternion.identity);
                 }
             }
         }
+
+        Point2i spiderStartPos = GetSpiderStartPos();
+        Player = (GameObject)Instantiate(Resources.Load<Object>("Spider"),
+                                         new Vector3(spiderStartPos.x, spiderStartPos.y),
+                                         Quaternion.identity);
+    }
+
+    // Use this for initialization
+    void Start() {
+        tilesets = LoadTilesets();
+        rng = new System.Random(0);
+        mapSize = new Point2i(100, 100);
+
+        int level = 1;
+        Regenerate(level);
     }
 
     // Update is called once per frame

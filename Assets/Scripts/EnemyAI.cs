@@ -4,18 +4,20 @@ using System.Collections;
 public class EnemyAI : MonoBehaviour
 {
     Transform lifeBar;
+    private Map map;
     
     float speed = 0.2F;
     // Use this for initialization
     void Start()
     {
         lifeBar = transform.FindChild("LifeBar");
+        map = FindObjectOfType<Map>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        GameObject spider = GameObject.Find("SpiderBody");
+        GameObject spider = map.PlayerBody;
         if (spider != null && Vector3.Distance(spider.transform.position, transform.position) < 10)
         {
             GetComponent<Rigidbody2D>().velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
@@ -37,8 +39,8 @@ public class EnemyAI : MonoBehaviour
 
     void OnTriggerEnter(Collider col)
     {
-        print(col.gameObject.name);
-        if (col.gameObject.name == "SpiderBody")
+//        print(col.gameObject.name);
+        if (col.gameObject.tag == "SpiderBody")
         {
             col.gameObject.SendMessage("Die");
         }
@@ -46,10 +48,10 @@ public class EnemyAI : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        print(collision.gameObject.name);
-        if(collision.gameObject.name == "SpiderBody")
+//        print(collision.gameObject.name);
+        if(collision.gameObject.tag == "SpiderBody")
         {
-            GameObject.Find("Spider").SendMessage("Die");
+            map.Player.SendMessage("Die");
         }
     }
 }
