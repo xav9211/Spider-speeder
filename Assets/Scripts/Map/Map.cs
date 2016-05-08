@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using Assets;
 using Assets.Map;
 using UnityEngine;
@@ -205,12 +206,11 @@ public class Map: MonoBehaviour {
 
     private Point2i mapSize;
     private Tile[,] tiles;
-    private GameObject[] tileTypes;
+    private Dictionary<Tile.Type, List<GameObject>> tilesets;
     private System.Random rng;
 
     // Returns a random tile that's not a wall
     public Point2i GetSpiderStartPos() {
-        System.Random rng = new System.Random(42);
         Point2i pos;
 
         do {
@@ -221,14 +221,34 @@ public class Map: MonoBehaviour {
         return pos;
     }
 
-    // Use this for initialization
-    void Start() {
-        tileTypes = new GameObject[Enum.GetNames(typeof(Tile.Type)).Length];
-        for (int i = 0; i < tileTypes.Length; ++i) {
-            tileTypes[i] = GameObject.Find("/Map/Tiles/" + Enum.GetNames(typeof(Tile.Type))[i]);
+    private static Dictionary<Tile.Type, List<GameObject>> LoadTilesets() {
+        Dictionary<Tile.Type, List<GameObject>> tilesets = new Dictionary<Tile.Type, List<GameObject>>();
+
+        foreach (GameObject tilesetObject in GameObject.FindGameObjectsWithTag("Tileset")) {
+            Tile.Type type;
+            try {
+                type = (Tile.Type) Enum.Parse(typeof (Tile.Type), tilesetObject.name);
+            } catch (ArgumentException) {
+                Debug.LogWarningFormat("{0} is not a valid Tile.Type; either add Tile.Type enum value "
+                                       + "with that name or remove the 'Tileset' tag from the object",
+                                       tilesetObject.name);
+                continue;
+            }
+
+            List<GameObject> tileset = new List<GameObject>();
+            for (int tileIdx = 0; tileIdx < tilesetObject.transform.childCount; ++tileIdx) {
+                tileset.Add(tilesetObject.transform.GetChild(tileIdx).gameObject);
+            }
+            tilesets.Add(type, tileset);
         }
 
-        rng = new System.Random(40);
+        return tilesets;
+    }
+
+    // Use this for initialization
+    void Start() {
+        tilesets = LoadTilesets();
+        rng = new System.Random(0);
         mapSize = new Point2i(100, 100);
 
         tiles = Generate(rng, mapSize.x, mapSize.y);
@@ -236,10 +256,10 @@ public class Map: MonoBehaviour {
         for (int y = 0; y < mapSize.y; ++y) {
             for (int x = 0; x < mapSize.x; ++x) {
                 Tile tile = tiles[x, y];
-                GameObject.Instantiate(tileTypes[(int)tile.type],
+                GameObject.Instantiate(tilesets[tile.type].Random(rng),
                                        new Vector3(x, y, 0.0f),
                                        Quaternion.identity);
-                if(tileTypes[(int)tile.type].gameObject.name == Enum.GetName(typeof(Tile.Type),Tile.Type.Chamber) && rng.Next(100) < 2)
+                if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2)
                 {
 
                     GameObject.Instantiate(GameObject.Find("Enemy"),
