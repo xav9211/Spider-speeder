@@ -12,15 +12,21 @@ class LegData {
     public Legs legPos;
     public GameObject gameObject;
     public SpringJoint2D spring;
-    public float lowerAngle;
-    public float upperAngle;
+	public Vector2 angleLimits; // ranges of leg movement x - lower limit, y -upper limit
+	public float currentAngle; // added because in unity angle 361degrees is saved as 1 degree (361 number is relevant)
+	public readonly float startMaxRange; // beggining value (in degrees) of maximum possible range
+	public readonly float arctanRotation; //rotation value (in degrees) which should be performed for proper arctan values
     public LineRenderer lr;
+	public float height = 0.5F; //leg size
+	public float maxFrameDeltaAngle = 5.0F; // by how many degrees can leg change in single frame
 
-    public LegData(Legs legPos, GameObject gameObject, float angleRange) {
+	public LegData(Legs legPos, GameObject gameObject, float angleRange, float startMaxRange, float arctanRotation) {
         this.legPos = legPos;
         this.gameObject = gameObject;
-        this.lowerAngle = gameObject.transform.localEulerAngles.z - angleRange / 2.0F;
-        this.upperAngle = gameObject.transform.localEulerAngles.z + angleRange / 2.0F;
+		this.currentAngle = gameObject.transform.localEulerAngles.z;
+		this.angleLimits = new Vector2 (currentAngle - angleRange / 2.0F, currentAngle + angleRange / 2.0F);
+		this.startMaxRange = startMaxRange;
+		this.arctanRotation = arctanRotation;
         this.spring = null;
         this.lr = gameObject.GetComponent<LineRenderer>();
     }
@@ -82,8 +88,8 @@ class RotateControlScheme : ControlScheme {
             float force = delta.x * inverse;
             float sensitivity = 3;
             float angle = leg.gameObject.transform.localEulerAngles.z;
-            if ((force > 0 && angle - sensitivity*force > leg.lowerAngle) ||
-                (force < 0 && angle - sensitivity*force < leg.upperAngle))
+            if ((force > 0 && angle - sensitivity*force > leg.angleLimits.x) ||
+				(force < 0 && angle - sensitivity*force < leg.angleLimits.y))
                 leg.gameObject.transform.Rotate(new Vector3(0, 0, -sensitivity*force));
         }
     }
@@ -92,11 +98,30 @@ class RotateControlScheme : ControlScheme {
 class PointAtTargetControlScheme : ControlScheme {
     public void MoveLeg(LegData leg,
                         Vector2 delta) {
-        if (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f) {
-            float angle = (float)(Math.Atan2(delta.y, delta.x) * 180.0 / Math.PI);
-            angle += 90.0f;
-            leg.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
+		if (!leg.spring && (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f)) {
+			delta = Quaternion.Euler (0, 0, leg.arctanRotation) * (-delta);
+			float diffAngle = Mathf.Rad2Deg * Mathf.Atan2(delta.y, delta.x);
+			if (diffAngle < 0) {
+				diffAngle = diffAngle < -90.0F ? 180.0F : 0.0F;
+			}
+
+			diffAngle = (leg.startMaxRange + diffAngle) - leg.currentAngle;
+			if (Mathf.Abs(diffAngle) > leg.maxFrameDeltaAngle)
+				diffAngle = Mathf.Sign(diffAngle) * leg.maxFrameDeltaAngle;
+
+			float finalAngle;
+
+			if (leg.currentAngle + diffAngle > leg.angleLimits.y)
+				finalAngle = leg.angleLimits.y;
+			else if (leg.currentAngle + diffAngle < leg.angleLimits.x)
+				finalAngle = leg.angleLimits.x;
+			else
+				finalAngle = leg.currentAngle + diffAngle;
+
+			leg.currentAngle = finalAngle;
+			leg.gameObject.transform.localEulerAngles = new Vector3(0, 0, finalAngle);
         }
+		
     }
 }
 
@@ -152,10 +177,10 @@ public class PlayerControl: MonoBehaviour {
         camera = transform.Find("Main Camera");
 
         legs = new Dictionary<Legs, LegData>();
-        legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange));
-        legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, GameObject.Find("TopLeftLeg"), angleRange));
-        legs.Add(Legs.BotRight, new LegData(Legs.BotRight, GameObject.Find("BotRightLeg"), angleRange));
-        legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, GameObject.Find("BotLeftLeg"), angleRange));
+        legs.Add(Legs.TopRight, new LegData(Legs.TopRight, GameObject.Find("TopRightLeg"), angleRange, 225.0F, 45.0F));
+        legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, GameObject.Find("TopLeftLeg"), angleRange, -45.0F, -45.0F));
+		legs.Add(Legs.BotRight, new LegData(Legs.BotRight, GameObject.Find("BotRightLeg"), angleRange, 135.0F, 135.0F));
+		legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, GameObject.Find("BotLeftLeg"), angleRange, 45.0F, -135.0F));
     }
 
     private void ToggleControlScheme(int playerIndex) {
@@ -200,15 +225,6 @@ public class PlayerControl: MonoBehaviour {
                 controlSchemes[1].MoveLeg(legs[Legs.BotLeft], axesMapping[1].LeftLeg.Delta);
                 controlSchemes[1].MoveLeg(legs[Legs.BotRight], axesMapping[1].RightLeg.Delta);
             }
-        }
-    }
-
-    void MoveLeg(LegData leg,
-                 Vector2 delta) {
-        if (Math.Abs(delta.x) > 0.0f || Math.Abs(delta.y) > 0.0f) {
-            float angle = (float)(Math.Atan2(delta.y, delta.x) * 180.0 / Math.PI);
-            angle += 90.0f;
-            leg.gameObject.transform.rotation = Quaternion.Euler(0.0f, 0.0f, angle);
         }
     }
 
