@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Assets;
 using Assets.Map;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class Map: MonoBehaviour {
@@ -183,13 +185,18 @@ public class Map: MonoBehaviour {
             }
         }
 
+        List<Point2i> chamberTiles = new List<Point2i>();
         foreach (Chamber c in chambers) {
             for (int y = c.bottom; y < c.top; ++y) {
                 for (int x = c.left; x < c.right; ++x) {
                     tiles[x, y] = new Tile(Tile.Type.Chamber, false);
+                    chamberTiles.Add(new Point2i(x, y));
                 }
             }
         }
+
+        Point2i exitPos = chamberTiles.Random(rng);
+        tiles[exitPos.x, exitPos.y] = new Tile(Tile.Type.Exit, true);
 
         return tiles;
     }
@@ -208,9 +215,19 @@ public class Map: MonoBehaviour {
     private GameObject[] tileTypes;
     private System.Random rng;
 
+    private int level = -1;
+    public int Level {
+        get { return level; }
+        private set {
+            level = value;
+            GameObject.Find("/Canvas/LevelText").GetComponent<Text>().text = "Level: " + level;
+        }
+    }
+
+    public GameObject Player { get; private set; }
+
     // Returns a random tile that's not a wall
     public Point2i GetSpiderStartPos() {
-        System.Random rng = new System.Random(42);
         Point2i pos;
 
         do {
@@ -221,16 +238,20 @@ public class Map: MonoBehaviour {
         return pos;
     }
 
-    // Use this for initialization
-    void Start() {
-        tileTypes = new GameObject[Enum.GetNames(typeof(Tile.Type)).Length];
-        for (int i = 0; i < tileTypes.Length; ++i) {
-            tileTypes[i] = GameObject.Find("/Map/Tiles/" + Enum.GetNames(typeof(Tile.Type))[i]);
+    private void ClearClones() {
+        foreach (var obj in GameObject.FindObjectsOfType<GameObject>()) {
+            if (obj.name.EndsWith("(Clone)")) {
+                Destroy(obj);
+            }
         }
+    }
 
-        rng = new System.Random(40);
+    internal void Regenerate(int level) {
+        Level = level;
+
+        ClearClones();
+
         mapSize = new Point2i(100, 100);
-
         tiles = Generate(rng, mapSize.x, mapSize.y);
 
         for (int y = 0; y < mapSize.y; ++y) {
@@ -239,15 +260,31 @@ public class Map: MonoBehaviour {
                 GameObject.Instantiate(tileTypes[(int)tile.type],
                                        new Vector3(x, y, 0.0f),
                                        Quaternion.identity);
-                if(tileTypes[(int)tile.type].gameObject.name == Enum.GetName(typeof(Tile.Type),Tile.Type.Chamber) && rng.Next(100) < 2)
+                if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2)
                 {
-
                     GameObject.Instantiate(GameObject.Find("Enemy"),
                                            new Vector3(x, y, 0.0f),
                                            Quaternion.identity);
                 }
             }
         }
+
+        Point2i spiderStartPos = GetSpiderStartPos();
+        Player = (GameObject)Instantiate(Resources.Load<Object>("Spider"),
+                                         new Vector3(spiderStartPos.x, spiderStartPos.y),
+                                         Quaternion.identity);
+    }
+
+    // Use this for initialization
+    void Start() {
+        tileTypes = new GameObject[Enum.GetNames(typeof(Tile.Type)).Length];
+        for (int i = 0; i < tileTypes.Length; ++i) {
+            tileTypes[i] = GameObject.Find("/Map/Tiles/" + Enum.GetNames(typeof(Tile.Type))[i]);
+        }
+
+        rng = new System.Random(1);
+        int level = 1;
+        Regenerate(level);
     }
 
     // Update is called once per frame
