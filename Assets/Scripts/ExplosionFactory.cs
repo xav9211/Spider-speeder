@@ -27,7 +27,7 @@ namespace Assets {
 
         public static GameObject Create(Vector2 position,
                                         float force = 1.0f) {
-            AudioUtils.Play("Explosion", position);
+            AudioUtils.Play("Explosion", position, 0.5f);
             ShakeScreen(Mathf.Sqrt(force));
             return CreateParticleSystem(position, force * 0.1f);
         }

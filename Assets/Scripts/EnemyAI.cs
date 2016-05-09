@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Assets;
+using Assets.Scripts;
 
 public class EnemyAI : MonoBehaviour
 {
@@ -34,7 +35,11 @@ public class EnemyAI : MonoBehaviour
         if(lifeBar.transform.localScale.y < 0.1)
         {
             ExplosionFactory.Create(transform.position, 1.0f);
+            AudioUtils.Play("ZombieDeath", transform.position);
             Destroy(this.gameObject);
+        }
+        else {
+            AudioUtils.Play("ZombieHit", transform.position);
         }
         
     }
@@ -53,6 +58,7 @@ public class EnemyAI : MonoBehaviour
 //        print(collision.gameObject.name);
         if(collision.gameObject.tag == "SpiderBody")
         {
+            AudioUtils.Play("ZombieAttack", transform.position);
             map.Player.SendMessage("Die");
         }
     }
