@@ -318,7 +318,7 @@ public class PlayerControl: MonoBehaviour {
 				Transform legTransform = leg.gameObject.transform;
 				Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
 				RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, leg.webHitInfo.point - legEnd, leg.swingRange, layerMask);
-				if (!(hitInfo.point == leg.webHitInfo.point)) {
+				if (Vector2.SqrMagnitude(hitInfo.point - leg.webHitInfo.point) > 0.001F) {
 					leg.lr.enabled = false;
 					SpringJoint2D spring = leg.spring;
 					Destroy (spring);
