@@ -4,9 +4,15 @@ using System.Collections.Generic;
 using Assets;
 using Assets.Scripts;
 
+interface DamageSource {
+    float Damage { get; }
+    Vector3 Position { get; }
+}
+
 enum Legs {
     TopRight, TopLeft, BotRight, BotLeft
 };
+
 class LegData {
     public Legs legPos;
     public GameObject gameObject;
@@ -129,7 +135,7 @@ class PointAtTargetControlScheme : ControlScheme {
     }
 }
 
-public class PlayerControl: MonoBehaviour {
+public class PlayerControl: MonoBehaviour, DamageSource {
     class LegAxisMapping {
         public AnalogStick LeftLeg { get; private set; }
         public AnalogStick RightLeg { get; private set; }
@@ -157,6 +163,7 @@ public class PlayerControl: MonoBehaviour {
     Dictionary<Legs, LegData> legs;
     Transform body;
 
+    public Vector3 Position { get { return body.position; } }
     public float Damage { get; private set; }
     public float Health { get; private set; }
 
@@ -272,7 +279,7 @@ public class PlayerControl: MonoBehaviour {
 				RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
 				if (hitInfo.collider) {
 					if (hitInfo.collider.name == "Enemy(Clone)") {
-						hitInfo.rigidbody.SendMessage ("Die", Damage);
+						hitInfo.rigidbody.SendMessage ("Die", this);
 					}
 
 					// if out leg is inside the wall don't create spring

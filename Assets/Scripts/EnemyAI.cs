@@ -29,12 +29,16 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    void Die(float damage)
+    void Die(DamageSource damageSource)
     {
-        lifeBar.transform.localScale -= Vector3.up*(damage / 100.0f);
+        lifeBar.transform.localScale -= Vector3.up*(damageSource.Damage / 100.0f);
+
         if (lifeBar.transform.localScale.y < 0.1) {
             ExplosionFactory.Create(transform.position, 1.0f);
             AudioUtils.Play("ZombieDeath", transform.position);
+
+            BloodFactory.SplatFromDamageSource(transform.position, damageSource);
+
             Destroy(this.gameObject);
         }
         else {
