@@ -265,6 +265,9 @@ public class PlayerControl: MonoBehaviour {
 					leg.lr.SetPosition (1, reachedPoint);
 					leg.lr.enabled = true;
 				}
+
+                AudioClip sound = (AudioClip)Resources.Load("Laser", typeof(AudioClip));
+                AudioSource.PlayClipAtPoint(sound, body.transform.position);
             }
         } else if (Input.GetKeyUp(key)) {
 			leg.lr.enabled = false;
