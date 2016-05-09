@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Assets;
+using Assets.Scripts;
 
 enum Legs {
     TopRight, TopLeft, BotRight, BotLeft
@@ -204,7 +205,7 @@ public class PlayerControl: MonoBehaviour {
     
     void Die()
     {
-        GameObject.FindGameObjectWithTag("BackgroundMusic").GetComponent<AudioSource>().Stop();
+        AudioUtils.BackgroundMusic.Stop();
         ExplosionFactory.Create(body.transform.position, 5.0f);
 
         Destroy(this.gameObject);
@@ -266,8 +267,7 @@ public class PlayerControl: MonoBehaviour {
 					leg.lr.enabled = true;
 				}
 
-                AudioClip sound = (AudioClip)Resources.Load("Laser", typeof(AudioClip));
-                AudioSource.PlayClipAtPoint(sound, body.transform.position);
+                AudioUtils.Play("Laser");
             }
         } else if (Input.GetKeyUp(key)) {
 			leg.lr.enabled = false;
@@ -290,6 +290,8 @@ public class PlayerControl: MonoBehaviour {
 					SpringJoint2D spring = leg.spring;
 					Destroy (spring);
 					leg.webHitInfo = new RaycastHit2D();
+
+                    AudioUtils.Play("FabricTorn", hitInfo.point);
 					return;
 				}
 			}

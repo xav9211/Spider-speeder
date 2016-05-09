@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Policy;
 using Assets;
 using Assets.Map;
+using Assets.Scripts;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -319,9 +320,8 @@ public class Map: MonoBehaviour {
                                          new Vector3(spiderStartPos.x, spiderStartPos.y),
                                          Quaternion.identity);
 
-        AudioSource bgMusicSource = GameObject.FindGameObjectWithTag("BackgroundMusic").GetComponent<AudioSource>();
-        if (!bgMusicSource.isPlaying) {
-            bgMusicSource.Play();
+        if (!AudioUtils.BackgroundMusic.isPlaying) {
+            AudioUtils.BackgroundMusic.Play();
         }
     }
 
