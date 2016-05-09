@@ -10,11 +10,11 @@ namespace Assets {
                                                                Quaternion.identity);
 
             ParticleSystem system = explosion.GetComponent<ParticleSystem>();
-            short numParticles = (short) (Mathf.Min(1000.0f, 150.0f*force));
+            short numParticles = (short) MathUtils.ScaleToRange(force, 15.0f, 100.0f);
             ParticleSystem.Burst burst = new ParticleSystem.Burst(0, numParticles);
             system.emission.SetBursts(new ParticleSystem.Burst[] {burst});
             system.startSpeed = force;
-            system.startSize = Mathf.Max(1.0f, force);
+            system.startSize = MathUtils.ScaleToRange(force, 0.5f, 1.0f);
 
             return explosion;
         }
@@ -28,7 +28,7 @@ namespace Assets {
         public static GameObject Create(Vector2 position,
                                         float force = 1.0f) {
             AudioUtils.Play("Explosion", position, 0.5f);
-            ShakeScreen(Mathf.Sqrt(force));
+            ShakeScreen(MathUtils.ScaleToRange(force, 0.5f, 3.0f));
             return CreateParticleSystem(position, force * 0.1f);
         }
     }
