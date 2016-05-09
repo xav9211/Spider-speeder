@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Policy;
 using Assets;
 using Assets.Map;
+using Assets.Scripts;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -237,7 +238,7 @@ public class Map: MonoBehaviour {
         }
     }
 
-    public GameObject Player { get; private set; }
+    public PlayerControl Player { get; private set; }
     public GameObject PlayerBody {
         get {
             if (Player == null) {
@@ -315,13 +316,13 @@ public class Map: MonoBehaviour {
         }
 
         Point2i spiderStartPos = GetSpiderStartPos();
-        Player = (GameObject)Instantiate(Resources.Load<Object>("Spider"),
-                                         new Vector3(spiderStartPos.x, spiderStartPos.y),
-                                         Quaternion.identity);
+        GameObject playerObj = (GameObject) Instantiate(Resources.Load<Object>("Spider"),
+                                                        new Vector3(spiderStartPos.x, spiderStartPos.y),
+                                                        Quaternion.identity);
+        Player = playerObj.GetComponent<PlayerControl>();
 
-        AudioSource bgMusicSource = GameObject.FindGameObjectWithTag("BackgroundMusic").GetComponent<AudioSource>();
-        if (!bgMusicSource.isPlaying) {
-            bgMusicSource.Play();
+        if (!AudioUtils.BackgroundMusic.isPlaying) {
+            AudioUtils.BackgroundMusic.Play();
         }
     }
 
