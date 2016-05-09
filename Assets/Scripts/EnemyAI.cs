@@ -29,11 +29,10 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    void Die()
+    void Die(float damage)
     {
-        lifeBar.transform.localScale -= Vector3.up*0.1F;
-        if(lifeBar.transform.localScale.y < 0.1)
-        {
+        lifeBar.transform.localScale -= Vector3.up*(damage / 100.0f);
+        if (lifeBar.transform.localScale.y < 0.1) {
             ExplosionFactory.Create(transform.position, 1.0f);
             AudioUtils.Play("ZombieDeath", transform.position);
             Destroy(this.gameObject);
@@ -49,17 +48,17 @@ public class EnemyAI : MonoBehaviour
 //        print(col.gameObject.name);
         if (col.gameObject.tag == "SpiderBody")
         {
-            col.gameObject.SendMessage("Die");
+            col.gameObject.SendMessage("Die", 10.0f);
         }
     }
 
-    void OnCollisionEnter2D(Collision2D collision)
+    void OnCollisionStay2D(Collision2D collision)
     {
 //        print(collision.gameObject.name);
         if(collision.gameObject.tag == "SpiderBody")
         {
             AudioUtils.Play("ZombieAttack", transform.position);
-            map.Player.SendMessage("Die");
+            map.Player.SendMessage("Die", 10.0f);
         }
     }
 }

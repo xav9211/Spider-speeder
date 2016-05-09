@@ -157,8 +157,26 @@ public class PlayerControl: MonoBehaviour {
     Dictionary<Legs, LegData> legs;
     Transform body;
 
+    public float Damage { get; private set; }
+    public float Health { get; private set; }
+
+    private bool isImmune = false;
+    public bool IsImmune {
+        get { return isImmune; }
+        private set {
+            isImmune = value;
+            Color color = isImmune ? new Color(1.0f, 1.0f, 1.0f, 0.5f) : Color.white;
+            foreach (SpriteRenderer spriteRenderer in GetComponentsInChildren<SpriteRenderer>()) {
+                spriteRenderer.color = color;
+            }
+        }
+    }
+
     // Use this for initialization
     void Start() {
+        Damage = 50.0f;
+        Health = 100.0f;
+
         var joystickNames = Input.GetJoystickNames();
         for (int i = 0; i < joystickNames.Length; ++i) {
             if (joystickNames[i].ToLower().Contains("xbox")) {
@@ -202,13 +220,28 @@ public class PlayerControl: MonoBehaviour {
             ToggleControlScheme(1);
         }
     }
-    
-    void Die()
-    {
-        AudioUtils.BackgroundMusic.Stop();
-        ExplosionFactory.Create(body.transform.position, 5.0f);
 
-        Destroy(this.gameObject);
+    void StopImmunity() {
+        IsImmune = false;
+    }
+
+    void Die(float damage) {
+        if (IsImmune) {
+            return;
+        }
+
+        Health -= damage;
+
+        const float IMMUNITY_TIME_S = 3.0f;
+        IsImmune = true;
+        Invoke("StopImmunity", IMMUNITY_TIME_S);
+
+        if (Health <= 0.0f) {
+            AudioUtils.BackgroundMusic.Stop();
+            ExplosionFactory.Create(body.transform.position, 3.0f);
+
+            Destroy(this.gameObject);
+        }
     }
 
     void Move() {
@@ -239,7 +272,7 @@ public class PlayerControl: MonoBehaviour {
 				RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
 				if (hitInfo.collider) {
 					if (hitInfo.collider.name == "Enemy(Clone)") {
-						hitInfo.rigidbody.SendMessage ("Die");
+						hitInfo.rigidbody.SendMessage ("Die", Damage);
 					}
 
 					// if out leg is inside the wall don't create spring
