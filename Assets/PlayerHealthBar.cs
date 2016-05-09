@@ -13,8 +13,7 @@ public class PlayerHealthBar : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	    if (map.Player) {
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, map.Player.Health);
-	    }
+		float currentPlayerHealth = map.Player ? map.Player.Health : 0.0F;
+		rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, currentPlayerHealth);
 	}
 }
