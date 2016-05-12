@@ -161,9 +161,8 @@ public class PlayerControl: MonoBehaviour, DamageSource {
     private List<ControlScheme> controlSchemes = new List<ControlScheme>();
 
     Dictionary<Legs, LegData> legs;
-    Transform body;
 
-    public Vector3 Position { get { return body.position; } }
+    public Vector3 Position { get { return transform.position; } }
     public float Damage { get; private set; }
     public float Health { get; private set; }
 
@@ -194,8 +193,6 @@ public class PlayerControl: MonoBehaviour, DamageSource {
                 controlSchemes.Add(new RotateControlScheme());
             }
         }
-
-        body = transform.Find("SpiderBody");
 
 		float angleRange = 180.0F;
 		float swingRange = 1000.0F;
@@ -232,6 +229,14 @@ public class PlayerControl: MonoBehaviour, DamageSource {
         IsImmune = false;
     }
 
+    public void StopMovement() {
+        Rigidbody2D body = GetComponent<Rigidbody2D>();
+        foreach (Rigidbody2D childBody in body.GetComponentsInChildren<Rigidbody2D>()) {
+            childBody.velocity = Vector3.zero;
+            childBody.angularVelocity = 0.0f;
+        }
+    }
+
     void Die(float damage) {
         if (IsImmune) {
             return;
@@ -245,7 +250,7 @@ public class PlayerControl: MonoBehaviour, DamageSource {
 
         if (Health <= 0.0f) {
             AudioUtils.BackgroundMusic.Stop();
-            ExplosionFactory.Create(body.transform.position, 3.0f);
+            ExplosionFactory.Create(transform.position, 3.0f);
 
             Destroy(this.gameObject);
         }

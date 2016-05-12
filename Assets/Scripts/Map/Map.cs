@@ -239,14 +239,6 @@ public class Map: MonoBehaviour {
     }
 
     public PlayerControl Player { get; private set; }
-    public GameObject PlayerBody {
-        get {
-            if (Player == null) {
-                return null;
-            }
-            return Player.transform.FindChild("SpiderBody").gameObject;
-        }
-    }
 
     // Returns a random tile that's not a wall
     public Point2i GetSpiderStartPos() {
@@ -316,14 +308,8 @@ public class Map: MonoBehaviour {
         }
 
         Point2i spiderStartPos = GetSpiderStartPos();
-        GameObject playerObj = (GameObject) Instantiate(Resources.Load<Object>("Spider"),
-                                                        new Vector3(spiderStartPos.x, spiderStartPos.y),
-                                                        Quaternion.identity);
-        Player = playerObj.GetComponent<PlayerControl>();
-
-        if (!AudioUtils.BackgroundMusic.isPlaying) {
-            AudioUtils.BackgroundMusic.Play();
-        }
+        Player.StopMovement();
+        Player.transform.position = new Vector3(spiderStartPos.x, spiderStartPos.y);
     }
 
     // Use this for initialization
@@ -332,8 +318,12 @@ public class Map: MonoBehaviour {
         rng = new System.Random(0);
         mapSize = new Point2i(100, 100);
 
+        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControl>();
+
         int level = 1;
         Regenerate(level);
+
+        AudioUtils.BackgroundMusic.Play();
     }
 
     // Update is called once per frame
