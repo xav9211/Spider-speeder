@@ -19,7 +19,7 @@ public class EnemyAI : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        GameObject spider = map.PlayerBody;
+        PlayerControl spider = map.Player;
         if (spider != null && Vector3.Distance(spider.transform.position, transform.position) < 10)
         {
             GetComponent<Rigidbody2D>().velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
@@ -50,7 +50,7 @@ public class EnemyAI : MonoBehaviour
     void OnTriggerEnter(Collider col)
     {
 //        print(col.gameObject.name);
-        if (col.gameObject.tag == "SpiderBody")
+        if (col.gameObject.tag == "Player")
         {
             col.gameObject.SendMessage("Die", 10.0f);
         }
@@ -59,7 +59,7 @@ public class EnemyAI : MonoBehaviour
     void OnCollisionStay2D(Collision2D collision)
     {
 //        print(collision.gameObject.name);
-        if(collision.gameObject.tag == "SpiderBody")
+        if(collision.gameObject.tag == "Player")
         {
             AudioUtils.Play("ZombieAttack", transform.position);
             map.Player.SendMessage("Die", 10.0f);

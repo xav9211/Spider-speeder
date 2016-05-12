@@ -10,8 +10,8 @@ public class PlayerFollower : MonoBehaviour {
     }
 
 	void Update () {
-	    if (map.PlayerBody != null) {
-	        lastPosition = map.PlayerBody.transform.position;
+	    if (map.Player != null) {
+	        lastPosition = map.Player.transform.position;
 	    } else if (Input.GetKeyDown(KeyCode.Joystick1Button0)
                    || Input.GetKeyDown(KeyCode.Joystick2Button0)) {
             map.Regenerate(1);
