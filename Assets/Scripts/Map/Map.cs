@@ -308,6 +308,7 @@ public class Map: MonoBehaviour {
         }
 
         Point2i spiderStartPos = GetSpiderStartPos();
+        Player.StopMovement();
         Player.transform.position = new Vector3(spiderStartPos.x, spiderStartPos.y);
     }
 

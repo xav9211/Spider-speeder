@@ -229,6 +229,14 @@ public class PlayerControl: MonoBehaviour, DamageSource {
         IsImmune = false;
     }
 
+    public void StopMovement() {
+        Rigidbody2D body = GetComponent<Rigidbody2D>();
+        foreach (Rigidbody2D childBody in body.GetComponentsInChildren<Rigidbody2D>()) {
+            childBody.velocity = Vector3.zero;
+            childBody.angularVelocity = 0.0f;
+        }
+    }
+
     void Die(float damage) {
         if (IsImmune) {
             return;
