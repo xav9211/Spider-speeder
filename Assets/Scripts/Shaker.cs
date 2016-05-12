@@ -20,7 +20,8 @@ public class Shaker : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         if (shake > 0.0f) {
-            camera.transform.localPosition += Random.insideUnitSphere * (shake / shakeTime) * shakeAmount;
+            Vector2 shakeDir = Random.insideUnitCircle * (shake / shakeTime) * shakeAmount;
+            camera.transform.localPosition = new Vector3(shakeDir.x, shakeDir.y, camera.transform.localPosition.z);
             shake -= Time.deltaTime;
         } else {
             shake = 0.0f;
