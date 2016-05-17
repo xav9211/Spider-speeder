@@ -298,11 +298,13 @@ public class Map: MonoBehaviour {
                 GameObject.Instantiate(tilesets[tile.type].Random(rng),
                                        new Vector3(x, y, 0.0f),
                                        Quaternion.identity);
-                if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 && !startChamber.Contains(new Point2i(x, y)))
+                if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level && !startChamber.Contains(new Point2i(x, y)))
                 {
-                    GameObject.Instantiate(Resources.Load<Object>("Enemy"),
+					var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
                                            new Vector3(x, y, 0.0f),
                                            Quaternion.identity);
+					var ai = (EnemyAI)creature.GetComponent("EnemyAI");
+					ai.createMonster (level);
                 }
             }
         }
