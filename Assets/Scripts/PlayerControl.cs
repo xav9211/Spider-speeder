@@ -265,7 +265,7 @@ public class PlayerControl: MonoBehaviour, DamageSource {
 
         Health -= damage;
 
-        const float IMMUNITY_TIME_S = 3.0f;
+        const float IMMUNITY_TIME_S = 1.0f;
         IsImmune = true;
         Invoke("StopImmunity", IMMUNITY_TIME_S);
 
