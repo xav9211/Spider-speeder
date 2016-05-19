@@ -241,6 +241,9 @@ public class PlayerControl: MonoBehaviour, DamageSource {
         if (Input.GetKeyDown(KeyCode.Joystick2Button7)) {
             ToggleControlScheme(1);
         }
+        if (Input.GetKeyDown(KeyCode.F2)) {
+            Die(10.0f);
+        }
     }
 
     void StopImmunity() {
