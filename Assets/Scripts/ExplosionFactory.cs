@@ -21,7 +21,7 @@ namespace Assets {
 
         private static void ShakeScreen(float force) {
             GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
-            Shaker shaker = camera.GetComponent<Shaker>();
+            Shaker shaker = camera.GetComponentInChildren<Shaker>();
             shaker.Shake(force);
         }
 
