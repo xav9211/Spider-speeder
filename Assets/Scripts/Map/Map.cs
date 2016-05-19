@@ -309,6 +309,11 @@ public class Map: MonoBehaviour {
             }
         }
 
+        if (Player == null) {
+            GameObject playerObj = (GameObject) GameObject.Instantiate(Resources.Load("SpiderBody"));
+            Player = playerObj.GetComponent<PlayerControl>();
+        }
+
         Point2i spiderStartPos = GetSpiderStartPos();
         Player.StopMovement();
         Player.transform.position = new Vector3(spiderStartPos.x, spiderStartPos.y);
@@ -319,8 +324,6 @@ public class Map: MonoBehaviour {
         tilesets = LoadTilesets();
         rng = new System.Random(0);
         mapSize = new Point2i(100, 100);
-
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerControl>();
 
         int level = 1;
         Regenerate(level);

@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Assets;
 using Assets.Scripts;
+using UnityEngine.Assertions;
 
 interface DamageSource {
     float Damage { get; }
@@ -178,8 +179,25 @@ public class PlayerControl: MonoBehaviour, DamageSource {
         }
     }
 
+    private void AttachCamera() {
+        GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
+        Assert.IsNull(camera.transform.parent, "there should be only one PlayerControl instance");
+        camera.transform.SetParent(transform);
+        camera.transform.localPosition = new Vector3(0.0f, 0.0f, camera.transform.localPosition.z);
+    }
+
+    private void DetachCamera() {
+        GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
+        camera.transform.SetParent(null);
+        camera.transform.position = new Vector3(transform.position.x,
+                                                transform.position.y,
+                                                camera.transform.position.z);
+    }
+
     // Use this for initialization
     void Start() {
+        AttachCamera();
+
         Damage = 50.0f;
         Health = 100.0f;
 
@@ -252,6 +270,7 @@ public class PlayerControl: MonoBehaviour, DamageSource {
             AudioUtils.BackgroundMusic.Stop();
             ExplosionFactory.Create(transform.position, 3.0f);
 
+            DetachCamera();
             Destroy(this.gameObject);
         }
     }
