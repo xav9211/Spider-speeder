@@ -64,6 +64,8 @@ public class EnemyAI : MonoBehaviour
 		float newScale =  0.7F / renderer.sprite.bounds.extents.x;
 		transform.localScale = new Vector3(newScale, newScale, 1);
 
+		transform.GetChild(0).transform.localScale = new Vector3(1/newScale, 1/newScale, 1);
+
 		var collider = (BoxCollider2D)gameObject.GetComponent ("BoxCollider2D");
 		collider.size = new Vector2(renderer.sprite.bounds.extents.x*2, renderer.sprite.bounds.extents.y*2);
 
@@ -85,9 +87,11 @@ public class EnemyAI : MonoBehaviour
 
     void Die(DamageSource damageSource)
     {
-		print (currentLife + " " + damage);
+		float oldLife = currentLife;
 		currentLife -= damageSource.Damage;
-		lifeBar.transform.localScale = new Vector3(1F, currentLife / life, 1F);
+		lifeBar.transform.localScale = new Vector3(lifeBar.transform.localScale.x, 
+			                                       lifeBar.transform.localScale.y * life / oldLife * currentLife / life, 
+			                                       lifeBar.transform.localScale.z);
 
         if (lifeBar.transform.localScale.y < 0.1) {
             ExplosionFactory.Create(transform.position, 1.0f);
