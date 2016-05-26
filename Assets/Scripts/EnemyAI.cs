@@ -5,7 +5,7 @@ namespace Assets.Scripts {
     public class EnemyAI : MonoBehaviour
     {
         Transform lifeBar;
-        private Map map;
+        private Map.Map map;
         private System.Random rng;
 
 
@@ -17,7 +17,7 @@ namespace Assets.Scripts {
         void Start()
         {
             lifeBar = transform.FindChild("LifeBar");
-            map = FindObjectOfType<Map>();
+            map = FindObjectOfType<Map.Map>();
 
         }
 

@@ -38,13 +38,13 @@ namespace Assets.Scripts {
             return itemObj;
         }
 
-        private Map map;
+        private Map.Map map;
 
         public float? RestoreHealth;
 
         // Use this for initialization
         void Start () {
-            map = GameObject.FindGameObjectWithTag("Map").GetComponent<Map>();
+            map = GameObject.FindGameObjectWithTag("Map").GetComponent<Map.Map>();
         }
 	
         // Update is called once per frame
