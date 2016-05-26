@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Assets.Map {
+namespace Assets.Scripts.Map {
     internal class Corridor {
         public readonly IList<Point2i> intermediatePoints;
 

@@ -1,6 +1,6 @@
 using UnityEngine.Assertions;
 
-namespace Assets.Map {
+namespace Assets.Scripts.Map {
     class Chamber {
         public readonly int left;
         public readonly int bottom;

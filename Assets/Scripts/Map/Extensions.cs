@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
-namespace Assets.Map {
+namespace Assets.Scripts.Map {
     static class ListExtensions {
         public static T Random<T>(this IList<T> list, System.Random rng) {
             Assert.IsTrue(list.Count > 0);

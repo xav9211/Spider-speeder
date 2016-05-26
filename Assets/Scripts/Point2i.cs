@@ -1,6 +1,6 @@
 using System;
 
-namespace Assets {
+namespace Assets.Scripts {
     public struct Point2i {
         public int x;
         public int y;

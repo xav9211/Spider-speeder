@@ -1,7 +1,6 @@
-﻿using Assets.Scripts;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Assets {
+namespace Assets.Scripts {
     public class ExplosionFactory {
         private static GameObject CreateParticleSystem(Vector2 position,
                                                        float force) {
