@@ -100,6 +100,7 @@ public class EnemyAI : MonoBehaviour
             BloodFactory.SplatFromDamageSource(transform.position, damageSource);
 
             Destroy(this.gameObject);
+            Item.CreateRandom(transform.position);
         }
         else {
             AudioUtils.Play("ZombieHit", transform.position);
