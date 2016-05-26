@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using Assets;
 using Assets.Scripts;
+using JetBrains.Annotations;
 using UnityEngine.Assertions;
 
 interface DamageSource {
@@ -179,6 +180,8 @@ public class PlayerControl: MonoBehaviour, DamageSource {
         }
     }
 
+    public Item SelectedItem;
+
     private void AttachCamera() {
         GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
         Assert.IsNull(camera.transform.parent, "there should be only one PlayerControl instance");
@@ -243,6 +246,20 @@ public class PlayerControl: MonoBehaviour, DamageSource {
         }
         if (Input.GetKeyDown(KeyCode.F2)) {
             Die(10.0f);
+        }
+
+        if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
+                    || Input.GetKeyDown(KeyCode.Joystick2Button0))
+                && SelectedItem) {
+            ApplyItem(SelectedItem);
+            Destroy(SelectedItem.gameObject);
+            SelectedItem = null;
+        }
+    }
+
+    private void ApplyItem(Item item) {
+        if (item.RestoreHealth.HasValue) {
+            Health += item.RestoreHealth.Value;
         }
     }
 
