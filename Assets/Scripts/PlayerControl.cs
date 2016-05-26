@@ -182,6 +182,8 @@ namespace Assets.Scripts {
 
         public Item SelectedItem;
 
+        private GameObject gameOverOverlay;
+
         private void AttachCamera() {
             GameObject camera = GameObject.FindGameObjectWithTag("MainCamera");
             Assert.IsNull(camera.transform.parent, "there should be only one PlayerControl instance");
@@ -200,6 +202,8 @@ namespace Assets.Scripts {
         // Use this for initialization
         void Start() {
             AttachCamera();
+            gameOverOverlay = GameObject.FindGameObjectWithTag("GameOverOverlay");
+            gameOverOverlay.SetActive(false);
 
             Damage = 50.0f;
             Health = 100.0f;
@@ -389,6 +393,10 @@ namespace Assets.Scripts {
                     leg.lr.SetPosition (0, legTip);
                 }
             }
+        }
+
+        void OnDestroy() {
+            gameOverOverlay.SetActive(true);
         }
     }
 }
