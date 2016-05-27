@@ -6,7 +6,9 @@ using Object = UnityEngine.Object;
 namespace Assets.Scripts {
     public class Item : MonoBehaviour {
         public enum Type {
-            HealthPack
+            HealthPack,
+            StrengthBonus,
+            StrengthDouble,
         }
 
         public static GameObject CreateRandom(Vector3 position) {
@@ -33,6 +35,22 @@ namespace Assets.Scripts {
             case Type.HealthPack:
                 item.RestoreHealth = 100.0f;
                 break;
+            case Type.StrengthBonus:
+                item.ApplyBuff = new Buff() {
+                    stat = Statistic.Damage,
+                    timeout = 10.0f,
+                    type = Buff.Type.Additive,
+                    value = 10.0f
+                };
+                break;
+            case Type.StrengthDouble:
+                item.ApplyBuff = new Buff() {
+                    stat = Statistic.Damage,
+                    timeout = 10.0f,
+                    type = Buff.Type.Multiplicative,
+                    value = 2.0f
+                };
+                break;
             }
 
             return itemObj;
@@ -41,6 +59,7 @@ namespace Assets.Scripts {
         private Map.Map map;
 
         public float? RestoreHealth;
+        public Buff? ApplyBuff;
 
         // Use this for initialization
         void Start () {
