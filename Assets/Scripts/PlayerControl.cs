@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Assets;
 using JetBrains.Annotations;
 using UnityEngine;
@@ -123,6 +124,7 @@ namespace Assets.Scripts {
 
                 float finalAngle;
 
+
                 if (leg.currentAngle + diffAngle > leg.angleLimits.y)
                     finalAngle = leg.angleLimits.y;
                 else if (leg.currentAngle + diffAngle < leg.angleLimits.x)
@@ -164,9 +166,20 @@ namespace Assets.Scripts {
 
         Dictionary<Legs, LegData> legs;
 
+        private BuffStack buffs = new BuffStack();
+
         public Vector3 Position { get { return transform.position; } }
-        public float Damage { get; private set; }
+
+        public float BaseDamage { get; private set; }
+        public float Damage {
+            get { return buffs.Apply(BaseDamage, Statistic.Damage); }
+        }
+
         public float Health { get; private set; }
+        public float BaseMaxHealth { get; private set; }
+        public float MaxHealth {
+            get { return buffs.Apply(BaseMaxHealth, Statistic.MaxHealth); }
+        }
 
         private bool isImmune = false;
         public bool IsImmune {
@@ -205,8 +218,9 @@ namespace Assets.Scripts {
             gameOverOverlay = GameObject.FindGameObjectWithTag("GameOverOverlay");
             gameOverOverlay.SetActive(false);
 
-            Damage = 50.0f;
-            Health = 100.0f;
+            BaseDamage = 50.0f;
+            BaseMaxHealth = 100.0f;
+            Health = BaseMaxHealth;
 
             var joystickNames = Input.GetJoystickNames();
             for (int i = 0; i < joystickNames.Length; ++i) {
@@ -263,7 +277,7 @@ namespace Assets.Scripts {
 
         private void ApplyItem(Item item) {
             if (item.RestoreHealth.HasValue) {
-                Health += item.RestoreHealth.Value;
+                Health = Mathf.Min(Health + item.RestoreHealth.Value, MaxHealth);
             }
         }
 
