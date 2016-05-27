@@ -166,7 +166,7 @@ namespace Assets.Scripts {
 
         Dictionary<Legs, LegData> legs;
 
-        private BuffStack buffs = new BuffStack();
+        private BuffStack buffs;
 
         public Vector3 Position { get { return transform.position; } }
 
@@ -217,6 +217,8 @@ namespace Assets.Scripts {
             AttachCamera();
             gameOverOverlay = GameObject.FindGameObjectWithTag("GameOverOverlay");
             gameOverOverlay.SetActive(false);
+
+            buffs = GetComponent<BuffStack>();
 
             BaseDamage = 50.0f;
             BaseMaxHealth = 100.0f;
@@ -278,6 +280,9 @@ namespace Assets.Scripts {
         private void ApplyItem(Item item) {
             if (item.RestoreHealth.HasValue) {
                 Health = Mathf.Min(Health + item.RestoreHealth.Value, MaxHealth);
+            }
+            if (item.ApplyBuff.HasValue) {
+                buffs.Add(item.ApplyBuff.Value);
             }
         }
 

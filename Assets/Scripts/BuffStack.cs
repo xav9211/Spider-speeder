@@ -9,7 +9,7 @@ namespace Assets.Scripts {
         Damage,
     }
 
-    struct Buff {
+    public struct Buff {
         public enum Type {
             Additive,
             Multiplicative
@@ -21,7 +21,7 @@ namespace Assets.Scripts {
         public float value;
     }
 
-    class BuffStack: MonoBehaviour {
+    public class BuffStack: MonoBehaviour {
         public Dictionary<Statistic, Dictionary<Buff.Type, List<Buff>>> Buffs { get; private set; }
 
         public BuffStack() {
@@ -38,10 +38,12 @@ namespace Assets.Scripts {
 
         private IEnumerator RemoveWhenExpired(Buff buff) {
             yield return new WaitForSeconds(buff.timeout);
+            //print("destroying buff: " + buff.stat + ", " + buff.type + ", " + buff.value + " for " + buff.timeout);
             Buffs[buff.stat][buff.type].Remove(buff);
         }
 
         public void Add(Buff buff) {
+            //print("adding buff: " + buff.stat + ", " + buff.type + ", " + buff.value + " for " + buff.timeout);
             Buffs[buff.stat][buff.type].Add(buff);
 
             // weird way to schedule something to be done after a delay
@@ -55,12 +57,13 @@ namespace Assets.Scripts {
 
             float value = baseValue;
             foreach (Buff buff in statBuffs[Buff.Type.Additive]) {
-                value += baseValue;
+                value += buff.value;
             }
             foreach (Buff buff in statBuffs[Buff.Type.Multiplicative]) {
-                value *= baseValue;
+                value *= buff.value;
             }
 
+            //print(statistic + " = " + baseValue + ", buffed: " + value);
             return value;
         }
     }
