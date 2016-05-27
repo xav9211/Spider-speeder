@@ -13,6 +13,7 @@ namespace Assets.Scripts {
         float speed = 0.2F;
         float life = 10F;
         float currentLife;
+        string damageSound;
         // Use this for initialization
         void Start()
         {
@@ -31,27 +32,32 @@ namespace Assets.Scripts {
                 speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
                 damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
                 life = Math.Max (1, rng.Next(val, 100*level) * 3F);
+                damageSound = "enemy2Damage";
             }
             else if (val >= 20 && val < 40) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/creature1");
                 speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
                 damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
                 life = Math.Max (1, rng.Next(val, 100*level) * 3F);
+                damageSound = "creature1Damage";
             } else if (val >= 40 && val < 60) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/enemy3");
                 speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
                 damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
                 life = Math.Max (1, rng.Next(val, 100*level) * 3F);
+                damageSound = "enemy3Damage";
             } else if (val >= 60 && val < 80) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/Przechwytywanie");
                 speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
                 damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
                 life = Math.Max (1, rng.Next(val, 100*level) * 3F);
+                damageSound = "przechwytywanieDamage";
             } else if (val >= 80 && val < 100) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/putin");
                 speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 30F);
                 damage = Math.Max (1, rng.Next(val, 100*level) / 2F);
                 life = Math.Max (1, rng.Next(val, 100*level) * 6F);
+                damageSound = "putinDamage";
             }
 
             currentLife = life;
@@ -102,7 +108,7 @@ namespace Assets.Scripts {
                 Item.CreateRandom(transform.position);
             }
             else {
-                AudioUtils.Play("ZombieHit", transform.position);
+                AudioUtils.Play(damageSound, transform.position, 10.0f);
             }
         
         }

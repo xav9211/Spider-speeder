@@ -265,7 +265,7 @@ namespace Assets.Scripts {
                 ToggleControlScheme(1);
             }
             if (Input.GetKeyDown(KeyCode.F2)) {
-                Die(10.0f);
+                Die(100.0f);
             }
 
             if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
@@ -280,6 +280,7 @@ namespace Assets.Scripts {
         private void ApplyItem(Item item) {
             if (item.RestoreHealth.HasValue) {
                 Health = Mathf.Min(Health + item.RestoreHealth.Value, MaxHealth);
+                AudioUtils.Play("HealUp", 7.0f);
             }
             if (item.ApplyBuff != null) {
                 buffs.Add(item.ApplyBuff);
@@ -314,6 +315,7 @@ namespace Assets.Scripts {
                 ExplosionFactory.Create(transform.position, 3.0f);
 
                 DetachCamera();
+                AudioUtils.Play("GameOver", 15.0f);
                 Destroy(this.gameObject);
             }
         }
