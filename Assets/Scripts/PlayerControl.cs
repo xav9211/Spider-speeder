@@ -280,11 +280,10 @@ namespace Assets.Scripts {
         private void ApplyItem(Item item) {
             if (item.RestoreHealth.HasValue) {
                 Health = Mathf.Min(Health + item.RestoreHealth.Value, MaxHealth);
+                AudioUtils.Play("HealUp", 7.0f);
             }
             if (item.ApplyBuff.HasValue) {
                 buffs.Add(item.ApplyBuff.Value);
-                Health += item.RestoreHealth.Value;
-                AudioUtils.Play("HealUp", 7.0f);
             }
         }
 
