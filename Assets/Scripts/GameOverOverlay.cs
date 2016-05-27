@@ -8,12 +8,9 @@ public class GameOverOverlay : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        print("start");
 	    foreach (CanvasRenderer renderer in GetComponentsInChildren<CanvasRenderer>()) {
-            print(renderer);
 	        baseAlpha.Add(renderer, renderer.GetAlpha());
 	    }
-        print("/start, " + baseAlpha.Count);
 	}
 
     // Update is called once per frame
