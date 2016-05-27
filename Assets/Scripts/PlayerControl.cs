@@ -265,7 +265,7 @@ namespace Assets.Scripts {
                 ToggleControlScheme(1);
             }
             if (Input.GetKeyDown(KeyCode.F2)) {
-                Die(10.0f);
+                Die(100.0f);
             }
 
             if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
@@ -283,6 +283,8 @@ namespace Assets.Scripts {
             }
             if (item.ApplyBuff.HasValue) {
                 buffs.Add(item.ApplyBuff.Value);
+                Health += item.RestoreHealth.Value;
+                AudioUtils.Play("HealUp", 7.0f);
             }
         }
 
