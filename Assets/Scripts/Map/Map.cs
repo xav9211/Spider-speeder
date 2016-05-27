@@ -274,7 +274,7 @@ namespace Assets.Scripts.Map {
 
         private void ClearClones() {
             foreach (var obj in GameObject.FindObjectsOfType<GameObject>()) {
-                if (obj.name.EndsWith("(Clone)")) {
+                if (obj.name.EndsWith("(Clone)") && obj.tag != "Player") {
                     Destroy(obj);
                 }
             }
