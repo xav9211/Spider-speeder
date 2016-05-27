@@ -314,6 +314,7 @@ namespace Assets.Scripts {
                 ExplosionFactory.Create(transform.position, 3.0f);
 
                 DetachCamera();
+                AudioUtils.Play("GameOver", 15.0f);
                 Destroy(this.gameObject);
             }
         }
