@@ -25,7 +25,7 @@ namespace Assets.Scripts {
             SpriteRenderer renderer = itemObj.GetComponent<SpriteRenderer>();
             Item item = itemObj.GetComponent<Item>();
 
-            Texture2D texture = Resources.Load<Texture2D>("Items/" + Enum.GetName(typeof (Type), type));
+            Texture2D texture = Resources.Load<Texture2D>("Items/" + type);
             Rect textureRect = Rect.MinMaxRect(0.0f, 0.0f, texture.width, texture.height);
             renderer.sprite = Sprite.Create(texture, textureRect, new Vector2(0.5f, 0.5f));
 
@@ -36,20 +36,18 @@ namespace Assets.Scripts {
                 item.RestoreHealth = 100.0f;
                 break;
             case Type.StrengthBonus:
-                item.ApplyBuff = new Buff() {
-                    stat = Statistic.Damage,
-                    timeout = 10.0f,
-                    type = Buff.Type.Additive,
-                    value = 10.0f
-                };
+                item.ApplyBuff = new Buff(Statistic.Damage,
+                                          Buff.Type.Additive,
+                                          10.0f,
+                                          10.0f,
+                                          "Items/StrengthBonus");
                 break;
             case Type.StrengthDouble:
-                item.ApplyBuff = new Buff() {
-                    stat = Statistic.Damage,
-                    timeout = 10.0f,
-                    type = Buff.Type.Multiplicative,
-                    value = 2.0f
-                };
+                item.ApplyBuff = new Buff(Statistic.Damage,
+                                          Buff.Type.Multiplicative,
+                                          2.0f,
+                                          10.0f,
+                                          "Items/StrengthDouble");
                 break;
             }
 
@@ -59,7 +57,7 @@ namespace Assets.Scripts {
         private Map.Map map;
 
         public float? RestoreHealth;
-        public Buff? ApplyBuff;
+        public Buff ApplyBuff;
 
         // Use this for initialization
         void Start () {

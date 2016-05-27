@@ -281,8 +281,8 @@ namespace Assets.Scripts {
             if (item.RestoreHealth.HasValue) {
                 Health = Mathf.Min(Health + item.RestoreHealth.Value, MaxHealth);
             }
-            if (item.ApplyBuff.HasValue) {
-                buffs.Add(item.ApplyBuff.Value);
+            if (item.ApplyBuff != null) {
+                buffs.Add(item.ApplyBuff);
             }
         }
 
@@ -415,7 +415,9 @@ namespace Assets.Scripts {
         }
 
         void OnDestroy() {
-            gameOverOverlay.SetActive(true);
+            if (gameOverOverlay != null) {
+                gameOverOverlay.SetActive(true);
+            }
         }
     }
 }
