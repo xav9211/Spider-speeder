@@ -2,12 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 
 namespace Assets.Scripts {
+    static class TimeSpanExtensions {
+        public static string ToGameTimeString(this TimeSpan time) {
+            return string.Format("{0}:{1:D2}.{2:D3}",
+                                 Mathf.FloorToInt((float) time.TotalMinutes),
+                                 time.Seconds,
+                                 time.Milliseconds);
+        }
+    }
+
     class GameStatistics: MonoBehaviour {
         public struct Stats {
             public float TotalDamageDealt;
@@ -17,6 +28,8 @@ namespace Assets.Scripts {
         }
 
         public static Stats[] PerPlayerStats;
+
+        public static float LastResetTime { get; private set; }
 
         // TODO: public float TotalDamageReceived { get; private set; }
         // TODO: public float MaxDamageReceived { get; private set; }
@@ -49,6 +62,7 @@ namespace Assets.Scripts {
 
         public static void Reset() {
             PerPlayerStats = new Stats[2];
+            LastResetTime = Time.time;
         }
 
         private struct LabeledStat {
@@ -104,6 +118,14 @@ namespace Assets.Scripts {
                 statContainer.FindChild("Star1").gameObject.SetActive(double.Parse(stat.values[0]) >= double.Parse(stat.values[1]));
                 statContainer.FindChild("Star2").gameObject.SetActive(double.Parse(stat.values[0]) <= double.Parse(stat.values[1]));
             }
+
+            Transform generalStatsContainer = transform.FindChild("GeneralStats");
+
+            Map.Map map = GameObject.FindGameObjectWithTag("Map").GetComponent<Map.Map>();
+            generalStatsContainer.FindChild("Level/Value").GetComponent<Text>().text = map.Level.ToString();
+
+            TimeSpan gameplayTime = TimeSpan.FromSeconds(Time.time - LastResetTime);
+            generalStatsContainer.FindChild("GameplayTime/Value").GetComponent<Text>().text = gameplayTime.ToGameTimeString();
         }
     }
 }
