@@ -13,12 +13,13 @@ namespace Assets.Scripts {
             public float TotalDamageDealt;
             public float MaxDamageDealt;
             public int EnemiesKilled;
+            public int ItemsPickedUp;
         }
 
         public static Stats[] PerPlayerStats;
 
-        public float TotalDamageReceived { get; private set; }
-        public float MaxDamageReceived { get; private set; }
+        // TODO: public float TotalDamageReceived { get; private set; }
+        // TODO: public float MaxDamageReceived { get; private set; }
 
         public static void Add(DamageInfo dmgInfo) {
             if (dmgInfo.PlayerNumber.HasValue) {
@@ -27,6 +28,13 @@ namespace Assets.Scripts {
                 s.MaxDamageDealt = Mathf.Max(s.MaxDamageDealt, dmgInfo.Damage);
             }
             // TODO: global stats
+        }
+
+        public static void AddItemPickup(int playerNumber,
+                                         Item item) {
+            Assert.IsTrue(playerNumber == 1 || playerNumber == 2);
+
+            ++PerPlayerStats[playerNumber - 1].ItemsPickedUp;
         }
 
         public static void AddKill(int? playerNumber,
@@ -75,6 +83,13 @@ namespace Assets.Scripts {
                         PerPlayerStats[1].EnemiesKilled.ToString()
                     }
                 },
+                new LabeledStat() {
+                    label = "ItemsPickedUp",
+                    values = new string[] {
+                        PerPlayerStats[0].ItemsPickedUp.ToString(),
+                        PerPlayerStats[1].ItemsPickedUp.ToString()
+                    }
+                },
             };
 
             Transform perPlayerStatsContainer = transform.FindChild("PerPlayerStats");
@@ -85,6 +100,7 @@ namespace Assets.Scripts {
                 statContainer.FindChild("P1").GetComponent<Text>().text = stat.values[0];
                 statContainer.FindChild("P2").GetComponent<Text>().text = stat.values[1];
 
+                // TODO: that cast is soo ugly
                 statContainer.FindChild("Star1").gameObject.SetActive(double.Parse(stat.values[0]) >= double.Parse(stat.values[1]));
                 statContainer.FindChild("Star2").gameObject.SetActive(double.Parse(stat.values[0]) <= double.Parse(stat.values[1]));
             }

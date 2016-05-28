@@ -297,6 +297,13 @@ namespace Assets.Scripts {
             if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
                  || Input.GetKeyDown(KeyCode.Joystick2Button0))
                 && SelectedItem) {
+                if (Input.GetKeyDown(KeyCode.Joystick1Button0)) {
+                    GameStatistics.AddItemPickup(1, SelectedItem);
+                }
+                if (Input.GetKeyDown(KeyCode.Joystick2Button0)) {
+                    GameStatistics.AddItemPickup(2, SelectedItem);
+                }
+
                 ApplyItem(SelectedItem);
                 Destroy(SelectedItem.gameObject);
                 SelectedItem = null;
