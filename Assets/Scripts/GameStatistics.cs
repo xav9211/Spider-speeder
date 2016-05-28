@@ -20,7 +20,7 @@ namespace Assets.Scripts {
     }
 
     class GameStatistics: MonoBehaviour {
-        public struct Stats {
+        public class Stats {
             public float TotalDamageDealt;
             public float MaxDamageDealt;
             public int EnemiesKilled;
@@ -34,9 +34,12 @@ namespace Assets.Scripts {
         // TODO: public float TotalDamageReceived { get; private set; }
         // TODO: public float MaxDamageReceived { get; private set; }
 
-        public static void Add(DamageInfo dmgInfo) {
+        public static void AddDamage(DamageInfo dmgInfo) {
+            Assert.IsTrue(!dmgInfo.PlayerNumber.HasValue
+                          || (dmgInfo.PlayerNumber.Value == 1 || dmgInfo.PlayerNumber.Value == 2));
+
             if (dmgInfo.PlayerNumber.HasValue) {
-                Stats s = PerPlayerStats[dmgInfo.PlayerNumber.Value];
+                Stats s = PerPlayerStats[dmgInfo.PlayerNumber.Value - 1];
                 s.TotalDamageDealt += dmgInfo.Damage;
                 s.MaxDamageDealt = Mathf.Max(s.MaxDamageDealt, dmgInfo.Damage);
             }
@@ -61,7 +64,7 @@ namespace Assets.Scripts {
         }
 
         public static void Reset() {
-            PerPlayerStats = new Stats[2];
+            PerPlayerStats = new Stats[2] {new Stats(), new Stats()};
             LastResetTime = Time.time;
         }
 

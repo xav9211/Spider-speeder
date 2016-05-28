@@ -22,7 +22,7 @@ namespace Assets.Scripts {
             TargetPosition = targetPosition;
             PlayerNumber = playerNumber;
 
-            GameStatistics.Add(this);
+            GameStatistics.AddDamage(this);
         }
     }
 
