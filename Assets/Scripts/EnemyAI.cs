@@ -2,25 +2,32 @@
 using UnityEngine;
 
 namespace Assets.Scripts {
+	public enum EnemyType {
+		Regular,
+		Boss
+	}
+
     public class EnemyAI : MonoBehaviour
     {
         Transform lifeBar;
         private Map.Map map;
-
-        float damage = 10F;
-        float speed = 0.2F;
-        float life = 10F;
-        float currentLife;
-        string damageSound;
+		protected EnemyType enemyType = EnemyType.Regular;
+		protected float damage = 10F;
+		protected float speed = 0.2F;
+		protected float life = 10F;
+		protected float currentLife;
+		protected string damageSound;
+		protected Rigidbody2D rb;
         Color green = new Color(0.0f, 0.7f, 0.0f, 0.9f);
         Color yellow = new Color(0.7f, 0.7f, 0.0f, 0.9f);
         Color red = new Color(0.7f, 0.0f, 0.0f, 0.9f);
+
         // Use this for initialization
-        void Start()
+        protected void Start()
         {
             lifeBar = transform.FindChild("LifeBar");
             map = FindObjectOfType<Map.Map>();
-
+			rb = GetComponent<Rigidbody2D> ();
         }
 
         public float createMonster(int level,
@@ -63,9 +70,6 @@ namespace Assets.Scripts {
 
             currentLife = life;
 
-
-
-
             const float FUCKING_MAGIC = 0.7f;
             float newScale =  FUCKING_MAGIC / renderer.sprite.bounds.extents.x;
             transform.localScale = new Vector3(newScale, newScale, 1);
@@ -87,10 +91,10 @@ namespace Assets.Scripts {
             PlayerControl spider = map.Player;
             if (spider != null && Vector3.Distance(spider.transform.position, transform.position) < 10)
             {
-                GetComponent<Rigidbody2D>().velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
+                rb.velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
             } else
             {
-                GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                rb.velocity = Vector2.zero;
             }
 
             if (lifeBar.transform.localScale.x > 0.6)
@@ -107,7 +111,7 @@ namespace Assets.Scripts {
             }
         }
 
-        void Die(DamageInfo dmgInfo)
+        protected void Die(DamageInfo dmgInfo)
         {
             float oldLife = currentLife;
             currentLife -= dmgInfo.Damage;
@@ -123,7 +127,18 @@ namespace Assets.Scripts {
                 GameStatistics.AddKill(dmgInfo.PlayerNumber, this);
 
                 Destroy(this.gameObject);
-                Item.CreateRandom(transform.position);
+				switch (enemyType) {
+				case EnemyType.Regular:
+					Item.CreateRandom (transform.position);
+					break;
+				case EnemyType.Boss:
+					var tileset = (GameObject.Find ("Map")).GetComponent<Assets.Scripts.Map.Map>().tilesets;
+					GameObject.Instantiate(tileset[Assets.Scripts.Map.Tile.Type.Exit][0],
+											transform.position,
+											Quaternion.identity);
+					break;
+				}
+                
             }
             else {
                 AudioUtils.Play(damageSound, transform.position, 10.0f);
@@ -140,7 +155,7 @@ namespace Assets.Scripts {
             }
         }
 
-        void OnCollisionStay2D(Collision2D collision)
+        protected void OnCollisionStay2D(Collision2D collision)
         {
 //        print(collision.gameObject.name);
             if(collision.gameObject.tag == "Player")

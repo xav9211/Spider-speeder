@@ -7,8 +7,9 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Assets.Scripts {
-    class DamageInfo {
-        public float Damage { get; private set; }
+    public class DamageInfo {
+		public Collider2D Collider { get; set; }
+        public float Damage { get; set; }
         public Vector3 SourcePosition { get; private set; }
         public Vector3 TargetPosition { get; private set; }
         public int? PlayerNumber { get; private set; }
@@ -16,7 +17,9 @@ namespace Assets.Scripts {
         public DamageInfo(float damage,
                           Vector3 sourcePosition,
                           Vector3 targetPosition,
-                          int? playerNumber) {
+                          int? playerNumber,
+						  Collider2D collider) {
+			Collider = collider;
             Damage = damage;
             SourcePosition = sourcePosition;
             TargetPosition = targetPosition;
@@ -380,11 +383,12 @@ namespace Assets.Scripts {
                     Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
                     RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
                     if (hitInfo.collider) {
-                        if (hitInfo.collider.name == "Enemy(Clone)") {
+                        if (hitInfo.collider.tag == "Enemy") {
                             DamageInfo dmgSource = new DamageInfo(Damage,
                                                                   Position,
                                                                   hitInfo.collider.gameObject.transform.position,
-                                                                  leg.PlayerNumber);
+                                                                  leg.PlayerNumber,
+																  hitInfo.collider);
                             hitInfo.rigidbody.SendMessage ("Die", dmgSource);
                         }
 
