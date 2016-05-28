@@ -69,8 +69,8 @@ namespace Assets.Scripts {
 
             transform.GetChild(0).transform.localScale = new Vector3(1/newScale, 1/newScale, 1);
 
-            var collider = (BoxCollider2D)gameObject.GetComponent ("BoxCollider2D");
-            collider.size = new Vector2(renderer.sprite.bounds.extents.x*2, renderer.sprite.bounds.extents.y*2);
+            var collider = gameObject.GetComponent <CircleCollider2D>();
+            collider.radius = renderer.sprite.bounds.extents.x;
 
             return damage + life;
         }
