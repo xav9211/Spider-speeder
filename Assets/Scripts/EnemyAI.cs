@@ -4,22 +4,23 @@ using UnityEngine;
 namespace Assets.Scripts {
     public class EnemyAI : MonoBehaviour
     {
-        Transform lifeBar;
-        private Map.Map map;
-        private System.Random rng;
+		protected Transform lifeBar;
+        protected Map.Map map;
+        protected System.Random rng;
 
 
-        float damage = 10F;
-        float speed = 0.2F;
-        float life = 10F;
-        float currentLife;
-        string damageSound;
+		protected float damage = 10F;
+		protected float speed = 0.2F;
+		protected float life = 10F;
+		protected float currentLife;
+		protected string damageSound;
+		protected Rigidbody2D rb;
         // Use this for initialization
-        void Start()
+        protected void Start()
         {
             lifeBar = transform.FindChild("LifeBar");
             map = FindObjectOfType<Map.Map>();
-
+			rb = GetComponent<Rigidbody2D> ();
         }
 
         public float createMonster(int level){
@@ -62,17 +63,13 @@ namespace Assets.Scripts {
 
             currentLife = life;
 
+			float newScale =  0.7F / renderer.sprite.bounds.extents.x;
+			transform.localScale = new Vector3(newScale, newScale, 1);
 
+			transform.GetChild(0).transform.localScale = new Vector3(1/newScale, 1/newScale, 1);
 
-
-
-            float newScale =  0.7F / renderer.sprite.bounds.extents.x;
-            transform.localScale = new Vector3(newScale, newScale, 1);
-
-            transform.GetChild(0).transform.localScale = new Vector3(1/newScale, 1/newScale, 1);
-
-            var collider = (BoxCollider2D)gameObject.GetComponent ("BoxCollider2D");
-            collider.size = new Vector2(renderer.sprite.bounds.extents.x*2, renderer.sprite.bounds.extents.y*2);
+			var collider = (BoxCollider2D)gameObject.GetComponent ("BoxCollider2D");
+			collider.size = new Vector2(renderer.sprite.bounds.extents.x*2, renderer.sprite.bounds.extents.y*2);
 
             return damage + life;
         }
@@ -83,10 +80,10 @@ namespace Assets.Scripts {
             PlayerControl spider = map.Player;
             if (spider != null && Vector3.Distance(spider.transform.position, transform.position) < 10)
             {
-                GetComponent<Rigidbody2D>().velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
+                rb.velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
             } else
             {
-                GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                rb.velocity = Vector2.zero;
             }
         }
 
@@ -122,7 +119,7 @@ namespace Assets.Scripts {
             }
         }
 
-        void OnCollisionStay2D(Collision2D collision)
+        protected void OnCollisionStay2D(Collision2D collision)
         {
 //        print(collision.gameObject.name);
             if(collision.gameObject.tag == "Player")

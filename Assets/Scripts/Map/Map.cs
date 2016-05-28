@@ -288,19 +288,28 @@ namespace Assets.Scripts.Map {
             mapSize = new Point2i(100, 100);
             tiles = Generate(rng, mapSize.x, mapSize.y);
 
+			bool added = false;
+
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
                     Tile tile = tiles[x, y];
                     GameObject.Instantiate(tilesets[tile.type].Random(rng),
                                            new Vector3(x, y, 0.0f),
                                            Quaternion.identity);
-                    if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level && !startChamber.Contains(new Point2i(x, y)))
+                    if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level /*&& !startChamber.Contains(new Point2i(x, y))*/)
                     {
-                        var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
-                                                                          new Vector3(x, y, 0.0f),
-                                                                          Quaternion.identity);
-                        var ai = (EnemyAI)creature.GetComponent("EnemyAI");
-                        ai.createMonster (level);
+						if (startChamber.Contains (new Point2i (x, y)) && !added) {
+							GameObject.Instantiate(Resources.Load<Object>("Boss"),
+								new Vector3(x, y+3, 0.0f),
+								Quaternion.identity);
+							added = true;
+						} else {
+							/*var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
+								new Vector3(x, y, 0.0f),
+								Quaternion.identity);
+							var ai = (EnemyAI)creature.GetComponent("EnemyAI");
+							ai.createMonster (level);*/
+						}
                     }
                 }
             }

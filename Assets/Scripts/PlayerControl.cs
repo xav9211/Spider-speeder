@@ -8,8 +8,9 @@ using UnityEngine.Assertions;
 
 namespace Assets.Scripts {
     interface DamageSource {
-        float Damage { get; }
+		float Damage { get; }
         Vector3 Position { get; }
+		Collider2D Collider { get; }
     }
 
     enum Legs {
@@ -167,8 +168,10 @@ namespace Assets.Scripts {
         Dictionary<Legs, LegData> legs;
 
         private BuffStack buffs;
+		private Collider2D lastCollider;
 
         public Vector3 Position { get { return transform.position; } }
+		public Collider2D Collider { get { return lastCollider; } }
 
         public float BaseDamage { get; private set; }
         public float Damage {
@@ -346,8 +349,9 @@ namespace Assets.Scripts {
                     // shoot web from the tip of the leg
                     Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
                     RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
+					lastCollider = hitInfo.collider;
                     if (hitInfo.collider) {
-                        if (hitInfo.collider.name == "Enemy(Clone)") {
+						if (hitInfo.collider.tag  == "Enemy") {
                             hitInfo.rigidbody.SendMessage ("Die", this);
                         }
 
