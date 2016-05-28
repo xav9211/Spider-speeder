@@ -6,8 +6,6 @@ namespace Assets.Scripts {
     {
         Transform lifeBar;
         private Map.Map map;
-        private System.Random rng;
-
 
         float damage = 10F;
         float speed = 0.2F;
@@ -22,10 +20,10 @@ namespace Assets.Scripts {
 
         }
 
-        public float createMonster(int level){
+        public float createMonster(int level,
+                                   System.Random rng){
             var renderer = (SpriteRenderer)gameObject.GetComponent ("SpriteRenderer");
 
-            rng = new System.Random ();
             var val = rng.Next(100*level);
             if (val < 20){
                 renderer.sprite = Resources.Load<Sprite> ("enemies/enemy2");
