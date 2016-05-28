@@ -25,14 +25,12 @@ namespace Assets.Scripts {
             public float MaxDamageDealt;
             public int EnemiesKilled;
             public int ItemsPickedUp;
+            public float LongestShot;
         }
 
         public static Stats[] PerPlayerStats;
 
         public static float LastResetTime { get; private set; }
-
-        // TODO: public float TotalDamageReceived { get; private set; }
-        // TODO: public float MaxDamageReceived { get; private set; }
 
         public static void AddDamage(DamageInfo dmgInfo) {
             Assert.IsTrue(!dmgInfo.PlayerNumber.HasValue
@@ -40,10 +38,11 @@ namespace Assets.Scripts {
 
             if (dmgInfo.PlayerNumber.HasValue) {
                 Stats s = PerPlayerStats[dmgInfo.PlayerNumber.Value - 1];
+
                 s.TotalDamageDealt += dmgInfo.Damage;
                 s.MaxDamageDealt = Mathf.Max(s.MaxDamageDealt, dmgInfo.Damage);
+                s.LongestShot = Mathf.Max(s.LongestShot, (dmgInfo.SourcePosition - dmgInfo.TargetPosition).magnitude);
             }
-            // TODO: global stats
         }
 
         public static void AddItemPickup(int playerNumber,
@@ -82,15 +81,15 @@ namespace Assets.Scripts {
                 new LabeledStat() {
                     label = "TotalDamage",
                     values = new string[] {
-                        PerPlayerStats[0].TotalDamageDealt.ToString(),
-                        PerPlayerStats[1].TotalDamageDealt.ToString()
+                        string.Format("{0:F0}", PerPlayerStats[0].TotalDamageDealt),
+                        string.Format("{0:F0}", PerPlayerStats[1].TotalDamageDealt)
                     }
                 },
                 new LabeledStat() {
                     label = "MaxDamage",
                     values = new string[] {
-                        PerPlayerStats[0].MaxDamageDealt.ToString(),
-                        PerPlayerStats[1].MaxDamageDealt.ToString()
+                        string.Format("{0:F0}", PerPlayerStats[0].MaxDamageDealt),
+                        string.Format("{0:F0}", PerPlayerStats[1].MaxDamageDealt)
                     }
                 },
                 new LabeledStat() {
@@ -107,6 +106,13 @@ namespace Assets.Scripts {
                         PerPlayerStats[1].ItemsPickedUp.ToString()
                     }
                 },
+                new LabeledStat() {
+                    label = "LongestShot",
+                    values = new string[] {
+                        string.Format("{0:F3}", PerPlayerStats[0].LongestShot),
+                        string.Format("{0:F3}", PerPlayerStats[1].LongestShot)
+                    }
+                },
             };
 
             Transform perPlayerStatsContainer = transform.FindChild("PerPlayerStats");
@@ -117,7 +123,7 @@ namespace Assets.Scripts {
                 statContainer.FindChild("P1").GetComponent<Text>().text = stat.values[0];
                 statContainer.FindChild("P2").GetComponent<Text>().text = stat.values[1];
 
-                // TODO: that cast is soo ugly
+                // TODO: that cast is soo ugly... but works
                 statContainer.FindChild("Star1").gameObject.SetActive(double.Parse(stat.values[0]) >= double.Parse(stat.values[1]));
                 statContainer.FindChild("Star2").gameObject.SetActive(double.Parse(stat.values[0]) <= double.Parse(stat.values[1]));
             }
