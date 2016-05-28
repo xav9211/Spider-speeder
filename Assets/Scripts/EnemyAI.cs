@@ -6,13 +6,16 @@ namespace Assets.Scripts {
     {
         Transform lifeBar;
         private Map.Map map;
-
-		protected float damage = 10F;
-		protected float speed = 0.2F;
-		protected float life = 10F;
+        protected float damage = 10F;
+        protected float speed = 0.2F;
+        protected float life = 10F;
 		protected float currentLife;
 		protected string damageSound;
 		protected Rigidbody2D rb;
+        Color green = new Color(0.0f, 0.7f, 0.0f, 0.9f);
+        Color yellow = new Color(0.7f, 0.7f, 0.0f, 0.9f);
+        Color red = new Color(0.7f, 0.0f, 0.0f, 0.9f);
+
         // Use this for initialization
         protected void Start()
         {
@@ -66,8 +69,17 @@ namespace Assets.Scripts {
 
 			transform.GetChild(0).transform.localScale = new Vector3(1/newScale, 1/newScale, 1);
 
-			var collider = (BoxCollider2D)gameObject.GetComponent ("BoxCollider2D");
-			collider.size = new Vector2(renderer.sprite.bounds.extents.x*2, renderer.sprite.bounds.extents.y*2);
+            const float FUCKING_MAGIC = 0.7f;
+            float newScale =  FUCKING_MAGIC / renderer.sprite.bounds.extents.x;
+            transform.localScale = new Vector3(newScale, newScale, 1);
+
+            Transform lifeBar = transform.GetChild(0);
+            lifeBar.position = transform.localPosition + new Vector3(0.0f, FUCKING_MAGIC, 0.0f);
+            lifeBar.localScale = new Vector3(0.5f/newScale, 0.1f/newScale, 1);
+            lifeBar.GetComponentInChildren<SpriteRenderer>().color = green;
+            
+            var collider = gameObject.GetComponent <CircleCollider2D>();
+            collider.radius = renderer.sprite.bounds.extents.x;
 
             return damage + life;
         }
@@ -83,17 +95,30 @@ namespace Assets.Scripts {
             {
                 rb.velocity = Vector2.zero;
             }
+
+            if (lifeBar.transform.localScale.x > 0.6)
+            {
+                lifeBar.GetComponentInChildren<SpriteRenderer>().color = green;
+            }
+            else if (lifeBar.transform.localScale.x > 0.3)
+            {
+                lifeBar.GetComponentInChildren<SpriteRenderer>().color = yellow;
+            }
+            else
+            {
+                lifeBar.GetComponentInChildren<SpriteRenderer>().color = red;
+            }
         }
 
         void Die(DamageInfo dmgInfo)
         {
             float oldLife = currentLife;
             currentLife -= dmgInfo.Damage;
-            lifeBar.transform.localScale = new Vector3(lifeBar.transform.localScale.x, 
-                                                       lifeBar.transform.localScale.y * life / oldLife * currentLife / life, 
+            lifeBar.transform.localScale = new Vector3(currentLife / life, 
+                                                       lifeBar.transform.localScale.y, 
                                                        lifeBar.transform.localScale.z);
 
-            if (lifeBar.transform.localScale.y < 0.1) {
+            if (lifeBar.transform.localScale.x < 0.1) {
                 ExplosionFactory.Create(transform.position, 1.0f);
                 AudioUtils.Play("ZombieDeath", transform.position);
 

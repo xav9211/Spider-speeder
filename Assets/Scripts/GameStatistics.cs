@@ -124,8 +124,8 @@ namespace Assets.Scripts {
                 statContainer.FindChild("P2").GetComponent<Text>().text = stat.values[1];
 
                 // TODO: that cast is soo ugly... but works
-                statContainer.FindChild("Star1").gameObject.SetActive(double.Parse(stat.values[0]) >= double.Parse(stat.values[1]));
-                statContainer.FindChild("Star2").gameObject.SetActive(double.Parse(stat.values[0]) <= double.Parse(stat.values[1]));
+                statContainer.FindChild("Star1").gameObject.SetActive(double.Parse(stat.values[0]) > double.Parse(stat.values[1]));
+                statContainer.FindChild("Star2").gameObject.SetActive(double.Parse(stat.values[0]) < double.Parse(stat.values[1]));
             }
 
             Transform generalStatsContainer = transform.FindChild("GeneralStats");
