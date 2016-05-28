@@ -97,16 +97,11 @@ namespace Assets.Scripts {
                 rb.velocity = Vector2.zero;
             }
 
-            if (lifeBar.transform.localScale.x > 0.6)
-            {
+            if (currentLife > 0.6 * life) {
                 lifeBar.GetComponentInChildren<SpriteRenderer>().color = green;
-            }
-            else if (lifeBar.transform.localScale.x > 0.3)
-            {
+            } else if (currentLife > 0.3 * life) {
                 lifeBar.GetComponentInChildren<SpriteRenderer>().color = yellow;
-            }
-            else
-            {
+            } else {
                 lifeBar.GetComponentInChildren<SpriteRenderer>().color = red;
             }
         }
@@ -115,11 +110,11 @@ namespace Assets.Scripts {
         {
             float oldLife = currentLife;
             currentLife -= dmgInfo.Damage;
-            lifeBar.transform.localScale = new Vector3(currentLife / life, 
+            lifeBar.transform.localScale = new Vector3(currentLife / life * 0.5f / transform.localScale.x, 
                                                        lifeBar.transform.localScale.y, 
                                                        lifeBar.transform.localScale.z);
 
-            if (lifeBar.transform.localScale.x < 0.1) {
+            if (currentLife < 0.1f) {
                 ExplosionFactory.Create(transform.position, 1.0f);
                 AudioUtils.Play("ZombieDeath", transform.position);
 
