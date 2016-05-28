@@ -7,9 +7,23 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Assets.Scripts {
-    interface DamageSource {
-        float Damage { get; }
-        Vector3 Position { get; }
+    class DamageInfo {
+        public float Damage { get; private set; }
+        public Vector3 SourcePosition { get; private set; }
+        public Vector3 TargetPosition { get; private set; }
+        public int? PlayerNumber { get; private set; }
+
+        public DamageInfo(float damage,
+                          Vector3 sourcePosition,
+                          Vector3 targetPosition,
+                          int? playerNumber) {
+            Damage = damage;
+            SourcePosition = sourcePosition;
+            TargetPosition = targetPosition;
+            PlayerNumber = playerNumber;
+
+            GameStatistics.AddDamage(this);
+        }
     }
 
     enum Legs {
@@ -32,6 +46,12 @@ namespace Assets.Scripts {
         public readonly float startMaxRange; // beggining value (in degrees) of maximum possible range
         public readonly float arctanRotation; //rotation value (in degrees) which should be performed for proper arctan values
 
+        private Vector2 originalLocalPos;
+
+        public int PlayerNumber {
+            get { return (legPos == Legs.TopLeft || legPos == Legs.TopRight) ? 1 : 2; }
+        }
+
         public LegData(Legs legPos, GameObject gameObject, float angleRange, float swingRange, float startMaxRange, float arctanRotation) {
             this.legPos = legPos;
             this.gameObject = gameObject;
@@ -42,6 +62,12 @@ namespace Assets.Scripts {
             this.arctanRotation = arctanRotation;
             this.lr = gameObject.GetComponent<LineRenderer>();
             this.spring = null;
+
+            originalLocalPos = gameObject.transform.localPosition;
+        }
+
+        public void ResetJoint() {
+            gameObject.transform.localPosition = originalLocalPos;
         }
     }
 
@@ -139,7 +165,7 @@ namespace Assets.Scripts {
         }
     }
 
-    public class PlayerControl: MonoBehaviour, DamageSource {
+    public class PlayerControl: MonoBehaviour {
         class LegAxisMapping {
             public AnalogStick LeftLeg { get; private set; }
             public AnalogStick RightLeg { get; private set; }
@@ -271,6 +297,13 @@ namespace Assets.Scripts {
             if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
                  || Input.GetKeyDown(KeyCode.Joystick2Button0))
                 && SelectedItem) {
+                if (Input.GetKeyDown(KeyCode.Joystick1Button0)) {
+                    GameStatistics.AddItemPickup(1, SelectedItem);
+                }
+                if (Input.GetKeyDown(KeyCode.Joystick2Button0)) {
+                    GameStatistics.AddItemPickup(2, SelectedItem);
+                }
+
                 ApplyItem(SelectedItem);
                 Destroy(SelectedItem.gameObject);
                 SelectedItem = null;
@@ -348,7 +381,11 @@ namespace Assets.Scripts {
                     RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
                     if (hitInfo.collider) {
                         if (hitInfo.collider.name == "Enemy(Clone)") {
-                            hitInfo.rigidbody.SendMessage ("Die", this);
+                            DamageInfo dmgSource = new DamageInfo(Damage,
+                                                                  Position,
+                                                                  hitInfo.collider.gameObject.transform.position,
+                                                                  leg.PlayerNumber);
+                            hitInfo.rigidbody.SendMessage ("Die", dmgSource);
                         }
 
                         // if out leg is inside the wall don't create spring
