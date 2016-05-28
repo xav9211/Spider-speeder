@@ -9,6 +9,8 @@ using Object = UnityEngine.Object;
 namespace Assets.Scripts.Map {
     public class Map: MonoBehaviour {
         private Chamber startChamber;
+		private Chamber exitChamber;
+		private Point2i exitPos;
 
         private Tile[,] Empty(int width, int height) {
             Tile[,] tiles = new Tile[width, height];
@@ -200,13 +202,12 @@ namespace Assets.Scripts.Map {
                     }
                 }
             }
-
-            Point2i exitPos;
+				
             do {
                 exitPos = chamberTiles.Random(rng);
             } while (startChamber.Contains(exitPos));
-        
-            tiles[exitPos.x, exitPos.y] = new Tile(Tile.Type.Exit, true);
+
+			exitChamber = chambers.Where (c => c.Contains (exitPos)).First ();
 
             return tiles;
         }
@@ -222,7 +223,7 @@ namespace Assets.Scripts.Map {
 
         private Point2i mapSize;
         private Tile[,] tiles;
-        private Dictionary<Tile.Type, List<GameObject>> tilesets;
+		public Dictionary<Tile.Type, List<GameObject>> tilesets;
         private System.Random rng;
 
         private int level = -1;
@@ -300,28 +301,25 @@ namespace Assets.Scripts.Map {
             mapSize = new Point2i(100, 100);
             tiles = Generate(rng, mapSize.x, mapSize.y);
 
-			bool added = false;
-
+			GameObject.Instantiate(Resources.Load<Object>("Boss"),
+				new Vector3(exitPos.x, exitPos.y , 0.0f),
+				Quaternion.identity);
+			
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
                     Tile tile = tiles[x, y];
                     GameObject.Instantiate(tilesets[tile.type].Random(rng),
                                            new Vector3(x, y, 0.0f),
                                            Quaternion.identity);
-                    if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level /*&& !startChamber.Contains(new Point2i(x, y))*/)
+                    if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level && 
+						!startChamber.Contains(new Point2i(x, y)) &&
+						!exitChamber.Contains(new Point2i(x, y)))
                     {
-						if (startChamber.Contains (new Point2i (x, y)) && !added) {
-							GameObject.Instantiate(Resources.Load<Object>("Boss"),
-								new Vector3(x, y+3, 0.0f),
-								Quaternion.identity);
-							added = true;
-						} else {
-							/*var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
-																			  new Vector3(x, y, 0.0f),
-																			  Quaternion.identity);
-							var ai = (EnemyAI)creature.GetComponent("EnemyAI");
-							ai.createMonster (level, rng);*/
-						}
+						var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
+																		  new Vector3(x, y, 0.0f),
+																		  Quaternion.identity);
+						var ai = (EnemyAI)creature.GetComponent("EnemyAI");
+						ai.createMonster (level, rng);
                     }
                 }
             }

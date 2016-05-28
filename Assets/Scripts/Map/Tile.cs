@@ -1,5 +1,5 @@
 namespace Assets.Scripts.Map {
-    internal class Tile {
+    public class Tile {
         public enum Type {
             Wall,
             Chamber,

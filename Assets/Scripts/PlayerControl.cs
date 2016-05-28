@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Assets.Scripts {
-    class DamageInfo {
+    public class DamageInfo {
 		public Collider2D Collider { get; set; }
         public float Damage { get; set; }
         public Vector3 SourcePosition { get; private set; }

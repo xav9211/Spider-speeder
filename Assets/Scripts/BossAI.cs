@@ -4,20 +4,19 @@ using System.Collections;
 namespace Assets.Scripts {
 	public class BossAI : EnemyAI {
 
-		// added because unity's method OnCollisionEnter2d does not work properly
-		// and in method OnCollisionStay2D velocity is changed because collision occured
-		// lame
-		Vector2 velocity = new Vector2(0f, 0f);
+		System.Random rng;
 
 		void Start () {
 			base.Start ();
 
-			damage = 10F;
-			speed = 0.2F;
+			enemyType = EnemyType.Boss;
+			damage = 25F;
+			speed = 4.0F;
 			life = 2.0F;
 			currentLife = life;
-
-			rb.velocity = velocity;
+			damageSound = "enemy2Damage";
+			rb.velocity = new Vector2(1.0f, 1.0f) * speed;
+			rng = new System.Random ((int)(damage * speed * life));
 		}
 
 		void Update () {
@@ -27,6 +26,7 @@ namespace Assets.Scripts {
 		void Die (DamageInfo dmgInfo){
 			string colliderName = dmgInfo.Collider.name;
 			if (colliderName.Contains ("Button")) {
+				AudioUtils.Play("bossButton", transform.position);
 				GameObject g = transform.FindChild (colliderName).gameObject;
 				g.transform.position = new Vector2 (transform.position.x, transform.position.y);
 				dmgInfo.Damage = 1.0f;
@@ -35,14 +35,19 @@ namespace Assets.Scripts {
 
 		}
 
-		void OnCollisionStay2D (Collision2D collision){
+		public void OnCollisionStay2D (Collision2D collision){
 			Vector2 normal = Vector2.zero;
 			foreach (var contact in collision.contacts){
 				normal += contact.normal;
 			}
 			normal.Normalize();
-			velocity = Vector2.Reflect (velocity, normal);
-			rb.velocity = velocity;
+			/* crazy random movement */
+			Vector2 vel = new Vector2 ((float)(rng.NextDouble()*2 - 1), (float)(rng.NextDouble()*2 - 1));
+			vel.Normalize ();
+			vel = new Vector2 (vel.x * Mathf.Sign(normal.x), vel.y * Mathf.Sign(normal.y));
+			vel.Normalize ();
+			vel *= speed;
+			rb.velocity = vel;
 
 			base.OnCollisionStay2D (collision);
 		}

@@ -2,11 +2,17 @@
 using UnityEngine;
 
 namespace Assets.Scripts {
+	public enum EnemyType {
+		Regular,
+		Boss
+	}
+
     public class EnemyAI : MonoBehaviour
     {
         Transform lifeBar;
         private Map.Map map;
 
+		protected EnemyType enemyType = EnemyType.Regular;
 		protected float damage = 10F;
 		protected float speed = 0.2F;
 		protected float life = 10F;
@@ -85,7 +91,7 @@ namespace Assets.Scripts {
             }
         }
 
-        void Die(DamageInfo dmgInfo)
+        protected void Die(DamageInfo dmgInfo)
         {
             float oldLife = currentLife;
             currentLife -= dmgInfo.Damage;
@@ -101,7 +107,18 @@ namespace Assets.Scripts {
                 GameStatistics.AddKill(dmgInfo.PlayerNumber, this);
 
                 Destroy(this.gameObject);
-                Item.CreateRandom(transform.position);
+				switch (enemyType) {
+				case EnemyType.Regular:
+					Item.CreateRandom (transform.position);
+					break;
+				case EnemyType.Boss:
+					var tileset = (GameObject.Find ("Map")).GetComponent<Assets.Scripts.Map.Map>().tilesets;
+					GameObject.Instantiate(tileset[Assets.Scripts.Map.Tile.Type.Exit][0],
+											transform.position,
+											Quaternion.identity);
+					break;
+				}
+                
             }
             else {
                 AudioUtils.Play(damageSound, transform.position, 10.0f);
