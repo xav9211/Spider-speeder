@@ -24,13 +24,13 @@ namespace Assets.Scripts {
 
 		}
 
-		void Die (DamageSource damageSource){
-			string colliderName = damageSource.Collider.name;
+		void Die (DamageInfo dmgInfo){
+			string colliderName = dmgInfo.Collider.name;
 			if (colliderName.Contains ("Button")) {
 				GameObject g = transform.FindChild (colliderName).gameObject;
 				g.transform.position = new Vector2 (transform.position.x, transform.position.y);
-				//damageSource.Damage = 1.0f;
-				//base.Die (damageSource);
+				dmgInfo.Damage = 1.0f;
+				base.Die (dmgInfo);
 			}
 
 		}

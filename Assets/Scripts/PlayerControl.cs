@@ -7,10 +7,26 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace Assets.Scripts {
-    interface DamageSource {
-		float Damage { get; }
-        Vector3 Position { get; }
-		Collider2D Collider { get; }
+    class DamageInfo {
+		public Collider2D Collider { get; set; }
+        public float Damage { get; set; }
+        public Vector3 SourcePosition { get; private set; }
+        public Vector3 TargetPosition { get; private set; }
+        public int? PlayerNumber { get; private set; }
+
+        public DamageInfo(float damage,
+                          Vector3 sourcePosition,
+                          Vector3 targetPosition,
+                          int? playerNumber,
+						  Collider2D collider) {
+			Collider = collider;
+            Damage = damage;
+            SourcePosition = sourcePosition;
+            TargetPosition = targetPosition;
+            PlayerNumber = playerNumber;
+
+            GameStatistics.AddDamage(this);
+        }
     }
 
     enum Legs {
@@ -33,6 +49,12 @@ namespace Assets.Scripts {
         public readonly float startMaxRange; // beggining value (in degrees) of maximum possible range
         public readonly float arctanRotation; //rotation value (in degrees) which should be performed for proper arctan values
 
+        private Vector2 originalLocalPos;
+
+        public int PlayerNumber {
+            get { return (legPos == Legs.TopLeft || legPos == Legs.TopRight) ? 1 : 2; }
+        }
+
         public LegData(Legs legPos, GameObject gameObject, float angleRange, float swingRange, float startMaxRange, float arctanRotation) {
             this.legPos = legPos;
             this.gameObject = gameObject;
@@ -43,6 +65,12 @@ namespace Assets.Scripts {
             this.arctanRotation = arctanRotation;
             this.lr = gameObject.GetComponent<LineRenderer>();
             this.spring = null;
+
+            originalLocalPos = gameObject.transform.localPosition;
+        }
+
+        public void ResetJoint() {
+            gameObject.transform.localPosition = originalLocalPos;
         }
     }
 
@@ -140,7 +168,7 @@ namespace Assets.Scripts {
         }
     }
 
-    public class PlayerControl: MonoBehaviour, DamageSource {
+    public class PlayerControl: MonoBehaviour {
         class LegAxisMapping {
             public AnalogStick LeftLeg { get; private set; }
             public AnalogStick RightLeg { get; private set; }
@@ -168,10 +196,8 @@ namespace Assets.Scripts {
         Dictionary<Legs, LegData> legs;
 
         private BuffStack buffs;
-		private Collider2D lastCollider;
 
         public Vector3 Position { get { return transform.position; } }
-		public Collider2D Collider { get { return lastCollider; } }
 
         public float BaseDamage { get; private set; }
         public float Damage {
@@ -274,6 +300,13 @@ namespace Assets.Scripts {
             if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
                  || Input.GetKeyDown(KeyCode.Joystick2Button0))
                 && SelectedItem) {
+                if (Input.GetKeyDown(KeyCode.Joystick1Button0)) {
+                    GameStatistics.AddItemPickup(1, SelectedItem);
+                }
+                if (Input.GetKeyDown(KeyCode.Joystick2Button0)) {
+                    GameStatistics.AddItemPickup(2, SelectedItem);
+                }
+
                 ApplyItem(SelectedItem);
                 Destroy(SelectedItem.gameObject);
                 SelectedItem = null;
@@ -349,10 +382,14 @@ namespace Assets.Scripts {
                     // shoot web from the tip of the leg
                     Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
                     RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
-					lastCollider = hitInfo.collider;
                     if (hitInfo.collider) {
-						if (hitInfo.collider.tag  == "Enemy") {
-                            hitInfo.rigidbody.SendMessage ("Die", this);
+                        if (hitInfo.collider.tag == "Enemy") {
+                            DamageInfo dmgSource = new DamageInfo(Damage,
+                                                                  Position,
+                                                                  hitInfo.collider.gameObject.transform.position,
+                                                                  leg.PlayerNumber,
+																  hitInfo.collider);
+                            hitInfo.rigidbody.SendMessage ("Die", dmgSource);
                         }
 
                         // if out leg is inside the wall don't create spring

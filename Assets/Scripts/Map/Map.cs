@@ -234,6 +234,15 @@ namespace Assets.Scripts.Map {
             }
         }
 
+        private int levelSeed = -1;
+        public int LevelSeed {
+            get { return levelSeed; }
+            private set {
+                levelSeed = value;
+                GameObject.Find("/Canvas/LevelText/SeedText").GetComponent<Text>().text = "Seed: " + levelSeed;
+            }
+        }
+
         public PlayerControl Player { get; private set; }
 
         // Returns a random tile that's not a wall
@@ -280,8 +289,11 @@ namespace Assets.Scripts.Map {
             }
         }
 
-        internal void Regenerate(int level) {
+        internal void Regenerate(int level,
+                                 int? rngSeed = null) {
             Level = level;
+            LevelSeed = rngSeed ?? rng.Next();
+            rng = new System.Random(LevelSeed);
 
             ClearClones();
 
@@ -305,10 +317,10 @@ namespace Assets.Scripts.Map {
 							added = true;
 						} else {
 							/*var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
-								new Vector3(x, y, 0.0f),
-								Quaternion.identity);
+																			  new Vector3(x, y, 0.0f),
+																			  Quaternion.identity);
 							var ai = (EnemyAI)creature.GetComponent("EnemyAI");
-							ai.createMonster (level);*/
+							ai.createMonster (level, rng);*/
 						}
                     }
                 }
@@ -317,6 +329,7 @@ namespace Assets.Scripts.Map {
             if (Player == null) {
                 GameObject playerObj = (GameObject) GameObject.Instantiate(Resources.Load("SpiderBody"));
                 Player = playerObj.GetComponent<PlayerControl>();
+                GameStatistics.Reset();
             }
 
             Point2i spiderStartPos = GetSpiderStartPos();
@@ -327,11 +340,11 @@ namespace Assets.Scripts.Map {
         // Use this for initialization
         void Start() {
             tilesets = LoadTilesets();
-            rng = new System.Random(0);
             mapSize = new Point2i(100, 100);
 
             int level = 1;
-            Regenerate(level);
+            int rngSeed = 0;
+            Regenerate(level, rngSeed);
 
             AudioUtils.BackgroundMusic.Play();
         }

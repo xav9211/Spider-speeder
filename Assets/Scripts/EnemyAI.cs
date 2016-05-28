@@ -4,10 +4,8 @@ using UnityEngine;
 namespace Assets.Scripts {
     public class EnemyAI : MonoBehaviour
     {
-		protected Transform lifeBar;
-        protected Map.Map map;
-        protected System.Random rng;
-
+        Transform lifeBar;
+        private Map.Map map;
 
 		protected float damage = 10F;
 		protected float speed = 0.2F;
@@ -23,10 +21,10 @@ namespace Assets.Scripts {
 			rb = GetComponent<Rigidbody2D> ();
         }
 
-        public float createMonster(int level){
+        public float createMonster(int level,
+                                   System.Random rng){
             var renderer = (SpriteRenderer)gameObject.GetComponent ("SpriteRenderer");
 
-            rng = new System.Random ();
             var val = rng.Next(100*level);
             if (val < 20){
                 renderer.sprite = Resources.Load<Sprite> ("enemies/enemy2");
@@ -87,10 +85,10 @@ namespace Assets.Scripts {
             }
         }
 
-        void Die(DamageSource damageSource)
+        void Die(DamageInfo dmgInfo)
         {
             float oldLife = currentLife;
-            currentLife -= damageSource.Damage;
+            currentLife -= dmgInfo.Damage;
             lifeBar.transform.localScale = new Vector3(lifeBar.transform.localScale.x, 
                                                        lifeBar.transform.localScale.y * life / oldLife * currentLife / life, 
                                                        lifeBar.transform.localScale.z);
@@ -99,7 +97,8 @@ namespace Assets.Scripts {
                 ExplosionFactory.Create(transform.position, 1.0f);
                 AudioUtils.Play("ZombieDeath", transform.position);
 
-                BloodFactory.SplatFromDamageSource(transform.position, damageSource);
+                BloodFactory.SplatFromDamageInfo(dmgInfo);
+                GameStatistics.AddKill(dmgInfo.PlayerNumber, this);
 
                 Destroy(this.gameObject);
                 Item.CreateRandom(transform.position);
