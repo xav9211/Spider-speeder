@@ -25,11 +25,8 @@ namespace Assets.Scripts {
             SpriteRenderer renderer = itemObj.GetComponent<SpriteRenderer>();
             Item item = itemObj.GetComponent<Item>();
 
-            Texture2D texture = Resources.Load<Texture2D>("Items/" + type);
-            Rect textureRect = Rect.MinMaxRect(0.0f, 0.0f, texture.width, texture.height);
-            renderer.sprite = Sprite.Create(texture, textureRect, new Vector2(0.5f, 0.5f));
-
-            itemObj.transform.localScale = new Vector2(0.5f, 0.5f);
+            renderer.sprite = Resources.Load<Sprite>("Items/" + type);
+            itemObj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
 
             switch (type) {
             case Type.HealthPack:
@@ -67,9 +64,9 @@ namespace Assets.Scripts {
         // Update is called once per frame
         void Update () {
             if (map.Player && map.Player.SelectedItem == this) {
-                GetComponent<SpriteRenderer>().color = new Color(1.0f, 1.0f, 1.0f, 0.5f);
+                GetComponentInChildren<Light>().enabled = true;
             } else {
-                GetComponent<SpriteRenderer>().color = Color.white;
+                GetComponentInChildren<Light>().enabled = false;
             }
         }
 

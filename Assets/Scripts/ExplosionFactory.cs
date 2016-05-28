@@ -1,6 +1,18 @@
 ﻿using UnityEngine;
 
 namespace Assets.Scripts {
+    public class ExplosionLight: MonoBehaviour {
+        private new Light light;
+
+        void Start() {
+            light = GetComponent<Light>();
+        }
+
+        void Update() {
+            light.range /= 1.1f;
+        }
+    }
+
     public class ExplosionFactory {
         private static GameObject CreateParticleSystem(Vector2 position,
                                                        float force) {
@@ -14,6 +26,14 @@ namespace Assets.Scripts {
             system.emission.SetBursts(new ParticleSystem.Burst[] {burst});
             system.startSpeed = force;
             system.startSize = MathUtils.ScaleToRange(force, 0.5f, 1.0f);
+
+            var lightObj = new GameObject("ExplosionLight", typeof(Light), typeof(ExplosionLight));
+            lightObj.transform.SetParent(explosion.transform);
+            lightObj.transform.localPosition = new Vector3(0.0f, 0.0f, -2.5f);
+
+            Light light = lightObj.GetComponent<Light>();
+            light.range = MathUtils.ScaleToRange(force, 25.0f, 100.0f);
+            light.color = Color.white;
 
             return explosion;
         }
