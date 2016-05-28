@@ -297,7 +297,7 @@ namespace Assets.Scripts.Map {
 
             ClearClones();
 
-            mapSize = new Point2i(100, 100);
+            mapSize = new Point2i(110, 110);
             tiles = Generate(rng, mapSize.x, mapSize.y);
 
             for (int y = 0; y < mapSize.y; ++y) {

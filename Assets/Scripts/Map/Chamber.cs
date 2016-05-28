@@ -43,7 +43,7 @@ namespace Assets.Scripts.Map {
         }
 
         public bool IsNotBorder(Point2i mapSize) {
-            return (left > 1 && right < mapSize.x - 2 && bottom > 1 && top < mapSize.y - 2);
+            return (left > 10 && right < mapSize.x - 11 && bottom > 10 && top < mapSize.y - 11);
         }
 
         public bool Equals(Chamber chamber) {
