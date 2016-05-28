@@ -321,6 +321,13 @@ namespace Assets.Scripts.Map {
 						var ai = (EnemyAI)creature.GetComponent("EnemyAI");
 						ai.createMonster (level, rng);
                     }
+
+                    // TODO: place lights more intelligently
+                    if (tile.type == Tile.Type.Chamber && rng.Next(100) < 1) {
+                        GameObject.Instantiate(Resources.Load<Object>("Fire"),
+                                               new Vector3(x, y, 0.0f),
+                                               Quaternion.identity);
+                    }
                 }
             }
 
@@ -331,6 +338,12 @@ namespace Assets.Scripts.Map {
             }
 
             Point2i spiderStartPos = GetSpiderStartPos();
+
+            // TODO: this might place the light inside a wall
+            GameObject.Instantiate(Resources.Load<Object>("Fire"),
+                                   new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
+                                   Quaternion.identity);
+
             Player.StopMovement();
             Player.transform.position = new Vector3(spiderStartPos.x, spiderStartPos.y);
         }
