@@ -7,9 +7,8 @@ using UnityEngine.Assertions;
 
 namespace Assets.Scripts {
     class BloodFactory {
-        public static GameObject SplatFromDamageSource(Vector3 position,
-                                                       DamageSource damageSource) {
-            return SplatFromDirection(position, position - damageSource.Position, damageSource.Damage);
+        public static GameObject SplatFromDamageInfo(DamageInfo info) {
+            return SplatFromDirection(info.TargetPosition, info.TargetPosition - info.SourcePosition, info.Damage);
         }
 
         public static GameObject SplatFromDirection(Vector3 position,

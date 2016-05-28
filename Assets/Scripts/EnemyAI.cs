@@ -90,10 +90,10 @@ namespace Assets.Scripts {
             }
         }
 
-        void Die(DamageSource damageSource)
+        void Die(DamageInfo dmgInfo)
         {
             float oldLife = currentLife;
-            currentLife -= damageSource.Damage;
+            currentLife -= dmgInfo.Damage;
             lifeBar.transform.localScale = new Vector3(lifeBar.transform.localScale.x, 
                                                        lifeBar.transform.localScale.y * life / oldLife * currentLife / life, 
                                                        lifeBar.transform.localScale.z);
@@ -102,7 +102,8 @@ namespace Assets.Scripts {
                 ExplosionFactory.Create(transform.position, 1.0f);
                 AudioUtils.Play("ZombieDeath", transform.position);
 
-                BloodFactory.SplatFromDamageSource(transform.position, damageSource);
+                BloodFactory.SplatFromDamageInfo(dmgInfo);
+                GameStatistics.AddKill(dmgInfo.PlayerNumber, this);
 
                 Destroy(this.gameObject);
                 Item.CreateRandom(transform.position);

@@ -308,6 +308,7 @@ namespace Assets.Scripts.Map {
             if (Player == null) {
                 GameObject playerObj = (GameObject) GameObject.Instantiate(Resources.Load("SpiderBody"));
                 Player = playerObj.GetComponent<PlayerControl>();
+                GameStatistics.Reset();
             }
 
             Point2i spiderStartPos = GetSpiderStartPos();
