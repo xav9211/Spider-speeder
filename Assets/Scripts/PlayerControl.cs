@@ -41,7 +41,6 @@ namespace Assets.Scripts {
         public RaycastHit2D webHitInfo;
         public Vector2 angleLimits; // ranges of leg movement x - lower limit, y -upper limit
         public float currentAngle; // added because in unity angle 361degrees is saved as 1 degree (361 number is relevant)
-        public float swingRange; // range of the web
         public bool swingCollision = false;
         public float height = 0.5F; //leg size
         public float maxFrameDeltaAngle = 5.0F; // by how many degrees can leg change in single frame
@@ -55,10 +54,9 @@ namespace Assets.Scripts {
             get { return (legPos == Legs.TopLeft || legPos == Legs.TopRight) ? 1 : 2; }
         }
 
-        public LegData(Legs legPos, GameObject gameObject, float angleRange, float swingRange, float startMaxRange, float arctanRotation) {
+        public LegData(Legs legPos, GameObject gameObject, float angleRange, float startMaxRange, float arctanRotation) {
             this.legPos = legPos;
             this.gameObject = gameObject;
-            this.swingRange = swingRange;
             this.currentAngle = gameObject.transform.localEulerAngles.z;
             this.angleLimits = new Vector2 (currentAngle - angleRange / 2.0F, currentAngle + angleRange / 2.0F);
             this.startMaxRange = startMaxRange;
@@ -210,6 +208,9 @@ namespace Assets.Scripts {
             get { return buffs.Apply(BaseMaxHealth, Statistic.MaxHealth); }
         }
 
+        public float BaseWebSwingRange { get; private set; }
+        public float WebSwingRange { get { return buffs.Apply(BaseWebSwingRange, Statistic.WebSwingRange); } }
+
         private bool isImmune = false;
         public bool IsImmune {
             get { return isImmune; }
@@ -252,6 +253,7 @@ namespace Assets.Scripts {
             BaseDamage = 50.0f;
             BaseMaxHealth = 100.0f;
             Health = BaseMaxHealth;
+            BaseWebSwingRange = 20.0f;
 
             var joystickNames = Input.GetJoystickNames();
             for (int i = 0; i < joystickNames.Length; ++i) {
@@ -265,12 +267,11 @@ namespace Assets.Scripts {
             }
 
             float angleRange = 180.0F;
-            float swingRange = 1000.0F;
             legs = new Dictionary<Legs, LegData>();
-            legs.Add(Legs.TopRight, new LegData(Legs.TopRight, transform.FindChild("TopRightLeg").gameObject, angleRange, swingRange, 225.0F, 45.0F));
-            legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, transform.FindChild("TopLeftLeg").gameObject, angleRange, swingRange, -45.0F, -45.0F));
-            legs.Add(Legs.BotRight, new LegData(Legs.BotRight, transform.FindChild("BotRightLeg").gameObject, angleRange, swingRange, 135.0F, 135.0F));
-            legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, transform.FindChild("BotLeftLeg").gameObject, angleRange, swingRange, 45.0F, -135.0F));
+            legs.Add(Legs.TopRight, new LegData(Legs.TopRight, transform.FindChild("TopRightLeg").gameObject, angleRange, 225.0F, 45.0F));
+            legs.Add(Legs.TopLeft, new LegData(Legs.TopLeft, transform.FindChild("TopLeftLeg").gameObject, angleRange, -45.0F, -45.0F));
+            legs.Add(Legs.BotRight, new LegData(Legs.BotRight, transform.FindChild("BotRightLeg").gameObject, angleRange, 135.0F, 135.0F));
+            legs.Add(Legs.BotLeft, new LegData(Legs.BotLeft, transform.FindChild("BotLeftLeg").gameObject, angleRange, 45.0F, -135.0F));
         }
 
         private void ToggleControlScheme(int playerIndex) {
@@ -379,7 +380,7 @@ namespace Assets.Scripts {
                     LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
                     // shoot web from the tip of the leg
                     Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
-                    RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, leg.swingRange, layerMask);
+                    RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, legTransform.up, WebSwingRange, layerMask);
                     if (hitInfo.collider) {
                         if (hitInfo.collider.tag == "Enemy") {
                             DamageInfo dmgSource = new DamageInfo(Damage,
@@ -410,7 +411,7 @@ namespace Assets.Scripts {
                     } else {
                         // did not hit anything, change web color to red with the end at the maximum range
                         leg.swingCollision = false;
-                        Vector2 reachedPoint = legTransform.position + legTransform.up * (leg.height + leg.swingRange);
+                        Vector2 reachedPoint = legTransform.position + legTransform.up * (leg.height + WebSwingRange);
                         leg.lr.SetPosition (1, reachedPoint);
                         leg.lr.enabled = true;
                     }
@@ -432,7 +433,7 @@ namespace Assets.Scripts {
                     LayerMask layerMask = ~(1 << LayerMask.NameToLayer("Player"));
                     Transform legTransform = leg.gameObject.transform;
                     Vector2 legEnd = legTransform.position + (legTransform.up * leg.height);
-                    RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, leg.webHitInfo.point - legEnd, leg.swingRange, layerMask);
+                    RaycastHit2D hitInfo = Physics2D.Raycast(legEnd, leg.webHitInfo.point - legEnd, WebSwingRange, layerMask);
                     if (Vector2.SqrMagnitude(hitInfo.point - leg.webHitInfo.point) > 0.001F) {
                         leg.lr.enabled = false;
                         SpringJoint2D spring = leg.spring;

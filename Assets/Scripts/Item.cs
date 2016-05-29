@@ -9,6 +9,8 @@ namespace Assets.Scripts {
             HealthPack,
             StrengthBonus,
             StrengthDouble,
+            WebSwingRangeBonus,
+            WebSwingRangeInfinite,
         }
 
         public static GameObject CreateRandom(Vector3 position) {
@@ -28,6 +30,8 @@ namespace Assets.Scripts {
             renderer.sprite = Resources.Load<Sprite>("Items/" + type);
             itemObj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
 
+            const float DEFAULT_BUFF_TIMEOUT_S = 10.0f;
+
             switch (type) {
             case Type.HealthPack:
                 item.RestoreHealth = 100.0f;
@@ -36,15 +40,29 @@ namespace Assets.Scripts {
                 item.ApplyBuff = new Buff(Statistic.Damage,
                                           Buff.Type.Additive,
                                           10.0f,
-                                          10.0f,
+                                          DEFAULT_BUFF_TIMEOUT_S,
                                           "Items/StrengthBonus");
                 break;
             case Type.StrengthDouble:
                 item.ApplyBuff = new Buff(Statistic.Damage,
                                           Buff.Type.Multiplicative,
                                           2.0f,
-                                          10.0f,
+                                          DEFAULT_BUFF_TIMEOUT_S,
                                           "Items/StrengthDouble");
+                break;
+            case Type.WebSwingRangeBonus:
+                item.ApplyBuff = new Buff(Statistic.WebSwingRange,
+                                          Buff.Type.Additive,
+                                          10.0f,
+                                          DEFAULT_BUFF_TIMEOUT_S,
+                                          "Items/WebSwingRangeBonus");
+                break;
+            case Type.WebSwingRangeInfinite:
+                item.ApplyBuff = new Buff(Statistic.WebSwingRange,
+                                          Buff.Type.Additive,
+                                          1000000.0f, // good approximation of infinity
+                                          DEFAULT_BUFF_TIMEOUT_S,
+                                          "Items/WebSwingRangeInfinite");
                 break;
             }
 
