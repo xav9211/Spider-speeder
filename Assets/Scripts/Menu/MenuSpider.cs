@@ -43,4 +43,8 @@ public class MenuSpider : MonoBehaviour {
     void PointAtNothing() {
         TargetAngle = null;
     }
+
+    void OnDestroy() {
+        Physics2D.gravity = Vector2.zero;
+    }
 }
