@@ -311,6 +311,8 @@ namespace Assets.Scripts.Map {
 			GameObject bossObj = (GameObject)Instantiate(Resources.Load<Object>("Boss"),
                                                          new Vector3(exitPos.x, exitPos.y , 0.0f),
                                                          Quaternion.identity);
+			var boss = (BossAI)bossObj.GetComponent ("BossAI");
+			boss.initialize (level, rng);
             bossObj.transform.parent = enemiesObj.transform;
 
             for (int y = 0; y < mapSize.y; ++y) {
