@@ -317,6 +317,9 @@ namespace Assets.Scripts {
                 Health = Mathf.Min(Health + item.RestoreHealth.Value, MaxHealth);
                 AudioUtils.Play("HealUp", 7.0f);
             }
+            if (item.ExplosionForce.HasValue) {
+                ExplosionFactory.Create(item.Position, item.ExplosionForce.Value);
+            }
             if (item.ApplyBuff != null) {
                 buffs.Add(item.ApplyBuff);
             }
