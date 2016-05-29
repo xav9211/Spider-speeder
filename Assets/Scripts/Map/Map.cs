@@ -305,7 +305,7 @@ namespace Assets.Scripts.Map {
 
         private void SpawnTiles() {
             GameObject tilesObj = new GameObject("Tiles");
-            tilesObj.transform.parent = transform;
+            tilesObj.transform.SetParent(transform);
 
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
@@ -313,21 +313,21 @@ namespace Assets.Scripts.Map {
                     GameObject tileObj = (GameObject)Instantiate(tilesets[tile.type].Random(rng),
                                                                  new Vector3(x, y, 0.0f),
                                                                  Quaternion.identity);
-                    tileObj.transform.parent = tilesObj.transform;
+                    tileObj.transform.SetParent(tilesObj.transform);
                 }
             }
         }
 
         private void SpawnEnemies() {
             GameObject enemiesObj = new GameObject("Enemies");
-            enemiesObj.transform.parent = transform;
+            enemiesObj.transform.SetParent(transform);
 
 			GameObject bossObj = (GameObject)Instantiate(Resources.Load<Object>("Boss"),
                                                          new Vector3(exitPos.x, exitPos.y , 0.0f),
                                                          Quaternion.identity);
 			var boss = (BossAI)bossObj.GetComponent ("BossAI");
 			boss.initialize (level, rng);
-            bossObj.transform.parent = enemiesObj.transform;
+            bossObj.transform.SetParent(enemiesObj.transform);
 
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
@@ -340,7 +340,7 @@ namespace Assets.Scripts.Map {
 						var creature = (GameObject)Instantiate(Resources.Load<Object>("Enemy"),
 															   new Vector3(x, y, 0.0f),
 															   Quaternion.identity);
-                        creature.transform.parent = enemiesObj.transform;
+                        creature.transform.SetParent(enemiesObj.transform);
 
 						var ai = (EnemyAI)creature.GetComponent("EnemyAI");
 						ai.createMonster (level, rng);
@@ -394,7 +394,7 @@ namespace Assets.Scripts.Map {
                                                                               corners[i].y - 0.5f,
                                                                               0.0f),
                                                                   Quaternion.identity);
-                        web.transform.parent = parentObject.transform;
+                        web.transform.SetParent(parentObject.transform);
                         web.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f*i);
 
                         float scale = rng.NextFromRange(MIN_WEB_SIZE, MAX_WEB_SIZE);
@@ -410,7 +410,7 @@ namespace Assets.Scripts.Map {
 
         private void SpawnDecorations(Point2i spiderStartPos) {
             GameObject decorationsObj = new GameObject("Decorations");
-            decorationsObj.transform.parent = transform;
+            decorationsObj.transform.SetParent(transform);
             
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
@@ -420,7 +420,7 @@ namespace Assets.Scripts.Map {
                         GameObject fireObj = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
                                                                      new Vector3(x, y, 0.0f),
                                                                      Quaternion.identity);
-                        fireObj.transform.parent = decorationsObj.transform;
+                        fireObj.transform.SetParent(decorationsObj.transform);
                     }
                 }
             }
@@ -429,7 +429,7 @@ namespace Assets.Scripts.Map {
             GameObject fireObjBesidePlayer = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
                                                                      new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
                                                                      Quaternion.identity);
-            fireObjBesidePlayer.transform.parent = decorationsObj.transform;
+            fireObjBesidePlayer.transform.SetParent(decorationsObj.transform);
 
             SpawnCornerWebs(decorationsObj);
         }

@@ -17,6 +17,8 @@ namespace Assets.Scripts {
             var splat = (GameObject)GameObject.Instantiate(Resources.Load("BloodSplat"),
                                                            new Vector3(position.x, position.y),
                                                            Quaternion.identity);
+            splat.transform.SetParent(GameObject.FindGameObjectWithTag("Map").transform);
+
             splat.transform.rotation = Quaternion.Euler(180.0f + (float) (Mathf.Rad2Deg*Math.Atan2(direction.y, direction.x)),
                                                         270.0f,
                                                         0.0f);

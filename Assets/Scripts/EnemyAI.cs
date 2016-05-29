@@ -120,9 +120,10 @@ namespace Assets.Scripts {
 					break;
 				case EnemyType.Boss:
 					var tileset = (GameObject.Find ("Map")).GetComponent<Assets.Scripts.Map.Map>().tilesets;
-					GameObject.Instantiate(tileset[Assets.Scripts.Map.Tile.Type.Exit][0],
-											transform.position,
-											Quaternion.identity);
+				    GameObject stairs = (GameObject) Instantiate(tileset[Assets.Scripts.Map.Tile.Type.Exit][0],
+                                                                 transform.position,
+                                                                 Quaternion.identity);
+				    stairs.transform.SetParent(map.transform);
 					break;
 				}
                 
