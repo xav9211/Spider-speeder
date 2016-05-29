@@ -8,19 +8,40 @@ namespace Assets.Scripts {
 
 		void Start () {
 			base.Start ();
-
 			enemyType = EnemyType.Boss;
-			damage = 25F;
-			speed = 4.0F;
-			life = 2.0F;
-			currentLife = life;
 			damageSound = "enemy2Damage";
 			rb.velocity = new Vector2(1.0f, 1.0f) * speed;
-			rng = new System.Random ((int)(damage * speed * life));
+		}
+
+		public void initialize (int level, System.Random rngg){
+			rng = rngg;
+			speed = rng.Next (2 * level + 2, 3 * level + 1);
+			damage = rng.Next (20 * level, 30 * level);
+			life = 2.0F * level;
+			currentLife = life;
+
+			CircleCollider2D bossColider = transform.GetComponentsInParent<CircleCollider2D> ()[0];
+			for (int i=0; i<life; i++){
+				GameObject buttonObj = (GameObject)Instantiate(Resources.Load<Object>("Button"),
+					transform.position,
+					Quaternion.identity);
+				buttonObj.name = "Button" + i;
+				float angle = i / life * 360.0f;
+
+				Transform btnTransform = buttonObj.transform;
+				btnTransform.parent = transform;
+				btnTransform.localScale = btnTransform.lossyScale;
+
+				Vector2 pos = new Vector2 (Mathf.Cos((angle + 90.0f) * Mathf.Deg2Rad), 
+										   Mathf.Sin((angle + 90.0f) * Mathf.Deg2Rad));
+				pos.Normalize ();
+				pos *= (bossColider.radius);
+				btnTransform.localPosition = pos;
+				btnTransform.localEulerAngles = new Vector3 (0, 0, angle);
+			}
 		}
 
 		void Update () {
-
 		}
 
 		void Die (DamageInfo dmgInfo){
