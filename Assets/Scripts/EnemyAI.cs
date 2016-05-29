@@ -34,37 +34,29 @@ namespace Assets.Scripts {
                                    System.Random rng){
             var renderer = (SpriteRenderer)gameObject.GetComponent ("SpriteRenderer");
 
-            var val = rng.Next(100*level);
+            var val = rng.Next(100);
+
+			// Yet another fucking magic
+			const float YAFM = 0.85f;
+			speed = 0.5f + (YAFM * level * val) / 100.0F;
+			damage = 10 + (YAFM * level * val) / 15.0F;
+			life = 100 + (YAFM * level * val);
+
             if (val < 20){
                 renderer.sprite = Resources.Load<Sprite> ("enemies/enemy2");
-                speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
-                damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
-                life = Math.Max (1, rng.Next(val, 100*level) * 3F);
                 damageSound = "enemy2Damage";
             }
             else if (val >= 20 && val < 40) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/creature1");
-                speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
-                damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
-                life = Math.Max (1, rng.Next(val, 100*level) * 3F);
                 damageSound = "creature1Damage";
             } else if (val >= 40 && val < 60) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/enemy3");
-                speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
-                damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
-                life = Math.Max (1, rng.Next(val, 100*level) * 3F);
                 damageSound = "enemy3Damage";
             } else if (val >= 60 && val < 80) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/Przechwytywanie");
-                speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 50F);
-                damage = Math.Max (1, rng.Next(val, 100*level) / 10F);
-                life = Math.Max (1, rng.Next(val, 100*level) * 3F);
                 damageSound = "przechwytywanieDamage";
             } else if (val >= 80 && val < 100) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/putin");
-                speed = Math.Max (0.1F, rng.Next (val, 100 * level) / 30F);
-                damage = Math.Max (1, rng.Next(val, 100*level) / 2F);
-                life = Math.Max (1, rng.Next(val, 100*level) * 6F);
                 damageSound = "putinDamage";
             }
 
