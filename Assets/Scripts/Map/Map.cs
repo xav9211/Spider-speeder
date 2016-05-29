@@ -476,8 +476,8 @@ namespace Assets.Scripts.Map {
         // Update is called once per frame
         void Update() {
             if (Player == null
-                    && (Input.GetKeyDown(KeyCode.Joystick1Button0)
-                        || Input.GetKeyDown(KeyCode.Joystick2Button0))) {
+                    && (Input.GetKeyDown(KeyCode.Joystick1Button3)
+                        || Input.GetKeyDown(KeyCode.Joystick2Button3))) {
                 int level = 1;
                 Regenerate(level);
             }
