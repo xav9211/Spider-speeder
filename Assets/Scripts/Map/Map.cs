@@ -165,7 +165,14 @@ namespace Assets.Scripts.Map {
             return corridors;
         }
 
-        private Tile[,] Generate(System.Random rng, int width, int height) {
+        private struct Layout {
+            public Point2i mapSize;
+            public Tile[,] tiles;
+            public IList<Chamber> chambers;
+            public IList<Corridor> corridors;
+        }
+
+        private Layout Generate(System.Random rng, int width, int height) {
             Tile[,] tiles = Empty(width, height);
             ChamberGeneratorConfig chamberCfg = new ChamberGeneratorConfig() {
                 mapSize = new Point2i(width, height),
@@ -210,7 +217,12 @@ namespace Assets.Scripts.Map {
 
 			exitChamber = chambers.Where (c => c.Contains (exitPos)).First ();
 
-            return tiles;
+            return new Layout() {
+                mapSize = mapSize,
+                tiles = tiles,
+                chambers = chambers,
+                corridors = corridors
+            };
         }
 
         private void addTiles(Tile[,] tiles, Point2i pointer, Point2i delta) {
@@ -223,7 +235,7 @@ namespace Assets.Scripts.Map {
         }
 
         private Point2i mapSize;
-        private Tile[,] tiles;
+        private Layout layout;
 		public Dictionary<Tile.Type, List<GameObject>> tilesets;
         private System.Random rng;
 
@@ -254,7 +266,7 @@ namespace Assets.Scripts.Map {
             do {
                 pos.x = rng.Next(startChamber.left, startChamber.right);
                 pos.y = rng.Next(startChamber.bottom, startChamber.top);
-            } while (tiles[pos.x, pos.y].isOccupied);
+            } while (layout.tiles[pos.x, pos.y].isOccupied);
 
             return pos;
         }
@@ -286,27 +298,29 @@ namespace Assets.Scripts.Map {
         }
 
         private void ClearClones() {
-            foreach (var obj in GameObject.FindObjectsOfType<GameObject>()) {
-                if (obj.name.EndsWith("(Clone)") && obj.tag != "Player") {
-                    Destroy(obj);
+            foreach (Transform t in transform) {
+                Destroy(t.gameObject);
+            }
+        }
+
+        private void SpawnTiles() {
+            GameObject tilesObj = new GameObject("Tiles");
+            tilesObj.transform.parent = transform;
+
+            for (int y = 0; y < mapSize.y; ++y) {
+                for (int x = 0; x < mapSize.x; ++x) {
+                    Tile tile = layout.tiles[x, y];
+                    GameObject tileObj = (GameObject)Instantiate(tilesets[tile.type].Random(rng),
+                                                                 new Vector3(x, y, 0.0f),
+                                                                 Quaternion.identity);
+                    tileObj.transform.parent = tilesObj.transform;
                 }
             }
         }
 
-        internal void Regenerate(int level,
-                                 int? rngSeed = null) {
-            Level = level;
-            LevelSeed = rngSeed ?? rng.Next();
-            rng = new System.Random(LevelSeed);
-
-            ClearClones();
-
-            mapSize = new Point2i(110, 110);
-            tiles = Generate(rng, mapSize.x, mapSize.y);
-
-            GameObject tilesObj = new GameObject("Tiles");
+        private void SpawnEnemies() {
             GameObject enemiesObj = new GameObject("Enemies");
-            GameObject decorationsObj = new GameObject("Decorations");
+            enemiesObj.transform.parent = transform;
 
 			GameObject bossObj = (GameObject)Instantiate(Resources.Load<Object>("Boss"),
                                                          new Vector3(exitPos.x, exitPos.y , 0.0f),
@@ -317,11 +331,7 @@ namespace Assets.Scripts.Map {
 
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
-                    Tile tile = tiles[x, y];
-                    GameObject tileObj = (GameObject)Instantiate(tilesets[tile.type].Random(rng),
-                                                                 new Vector3(x, y, 0.0f),
-                                                                 Quaternion.identity);
-                    tileObj.transform.parent = tilesObj.transform;
+                    Tile tile = layout.tiles[x, y];
 
                     if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level && 
 						!startChamber.Contains(new Point2i(x, y)) &&
@@ -335,7 +345,76 @@ namespace Assets.Scripts.Map {
 						var ai = (EnemyAI)creature.GetComponent("EnemyAI");
 						ai.createMonster (level, rng);
                     }
+                }
+            }
+        }
 
+        private static bool TileTypeInRange(Tile[,] tiles,
+                                            Point2i mapSize,
+                                            Tile.Type type,
+                                            Point2i centerTile,
+                                            int range) {
+            Assert.IsTrue(range >= 0);
+
+            int xBegin = Math.Max(0, centerTile.x - range);
+            int xEnd = Math.Min(centerTile.x + range + 1, mapSize.x);
+            int yBegin = Math.Max(0, centerTile.y - range);
+            int yEnd = Math.Min(centerTile.y + range + 1, mapSize.y);
+
+            for (int x = xBegin; x < xEnd; ++x) {
+                for (int y = yBegin; y < yEnd; ++y) {
+                    if (tiles[x, y].type == type) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private void SpawnCornerWebs(GameObject parentObject) {
+            const double WEB_IN_CORNER_CHANCE = 0.2f;
+            const float MIN_WEB_SIZE = 0.5f;
+            const float MAX_WEB_SIZE = 1.5f;
+
+            foreach (Chamber chamber in layout.chambers) {
+                Point2i[] corners = {
+                    new Point2i(chamber.left, chamber.top),
+                    new Point2i(chamber.left, chamber.bottom),
+                    new Point2i(chamber.right, chamber.bottom),
+                    new Point2i(chamber.right, chamber.top),
+                };
+
+                for (int i = 0; i < corners.Length; ++i) {
+                    if (!TileTypeInRange(layout.tiles, layout.mapSize, Tile.Type.Corridor, corners[i], 2)
+                        // don't spawn webs in corners next to corridors to avoid hanging ones
+                        && rng.NextDouble() < WEB_IN_CORNER_CHANCE) {
+                        GameObject web = (GameObject) Instantiate(Resources.Load<Object>("Decoration"),
+                                                                  new Vector3(corners[i].x - 0.5f,
+                                                                              corners[i].y - 0.5f,
+                                                                              0.0f),
+                                                                  Quaternion.identity);
+                        web.transform.parent = parentObject.transform;
+                        web.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, 90.0f*i);
+
+                        float scale = rng.NextFromRange(MIN_WEB_SIZE, MAX_WEB_SIZE);
+                        web.transform.localScale = new Vector3(scale, scale, 1.0f);
+
+                        Sprite sprite = Resources.Load<Sprite>("Decorations/WebCorner/spider_web_corner_0");
+                        SpriteRenderer renderer = web.GetComponent<SpriteRenderer>();
+                        renderer.sprite = sprite;
+                    }
+                }
+            }
+        }
+
+        private void SpawnDecorations(Point2i spiderStartPos) {
+            GameObject decorationsObj = new GameObject("Decorations");
+            decorationsObj.transform.parent = transform;
+            
+            for (int y = 0; y < mapSize.y; ++y) {
+                for (int x = 0; x < mapSize.x; ++x) {
+                    Tile tile = layout.tiles[x, y];
                     // TODO: place lights more intelligently
                     if (tile.type == Tile.Type.Chamber && rng.Next(100) < 1) {
                         GameObject fireObj = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
@@ -346,19 +425,37 @@ namespace Assets.Scripts.Map {
                 }
             }
 
+            // TODO: this might place the light inside a wall
+            GameObject fireObjBesidePlayer = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
+                                                                     new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
+                                                                     Quaternion.identity);
+            fireObjBesidePlayer.transform.parent = decorationsObj.transform;
+
+            SpawnCornerWebs(decorationsObj);
+        }
+
+        internal void Regenerate(int level,
+                                 int? rngSeed = null) {
+            Level = level;
+            LevelSeed = rngSeed ?? rng.Next();
+            rng = new System.Random(LevelSeed);
+
+            ClearClones();
+
+            mapSize = new Point2i(110, 110);
+            layout = Generate(rng, mapSize.x, mapSize.y);
+
+            Point2i spiderStartPos = GetSpiderStartPos();
+
+            SpawnTiles();
+            SpawnEnemies();
+            SpawnDecorations(spiderStartPos);
+
             if (Player == null) {
                 GameObject playerObj = (GameObject) GameObject.Instantiate(Resources.Load("SpiderBody"));
                 Player = playerObj.GetComponent<PlayerControl>();
                 GameStatistics.Reset();
             }
-
-            Point2i spiderStartPos = GetSpiderStartPos();
-
-            // TODO: this might place the light inside a wall
-            GameObject fileObjBesidePlayer = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
-                                                                     new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
-                                                                     Quaternion.identity);
-            fileObjBesidePlayer.transform.parent = decorationsObj.transform;
 
             Player.StopMovement();
             Player.transform.position = new Vector3(spiderStartPos.x, spiderStartPos.y);
