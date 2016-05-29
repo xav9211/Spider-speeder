@@ -297,9 +297,7 @@ namespace Assets.Scripts {
                 Die(100.0f);
             }
 
-            if ((Input.GetKeyDown(KeyCode.Joystick1Button0)
-                 || Input.GetKeyDown(KeyCode.Joystick2Button0))
-                && SelectedItem) {
+            if ((Input.GetKeyDown(KeyCode.Joystick1Button0) || Input.GetKeyDown(KeyCode.Joystick2Button0)) && SelectedItem) {
                 if (Input.GetKeyDown(KeyCode.Joystick1Button0)) {
                     GameStatistics.AddItemPickup(1, SelectedItem);
                 }
