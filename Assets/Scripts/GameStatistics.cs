@@ -130,8 +130,11 @@ namespace Assets.Scripts {
 
             Transform generalStatsContainer = transform.FindChild("GeneralStats");
 
-            Map.Map map = GameObject.FindGameObjectWithTag("Map").GetComponent<Map.Map>();
-            generalStatsContainer.FindChild("Level/Value").GetComponent<Text>().text = map.Level.ToString();
+            GameObject mapObj = GameObject.FindGameObjectWithTag("Map");
+            if (mapObj) {
+                Map.Map map = mapObj.GetComponent<Map.Map>();
+                generalStatsContainer.FindChild("Level/Value").GetComponent<Text>().text = map.Level.ToString();
+            }
 
             TimeSpan gameplayTime = TimeSpan.FromSeconds(Time.time - LastResetTime);
             generalStatsContainer.FindChild("GameplayTime/Value").GetComponent<Text>().text = gameplayTime.ToGameTimeString();

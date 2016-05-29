@@ -31,6 +31,7 @@ namespace Assets.Scripts {
             Item item = itemObj.GetComponent<Item>();
 
             renderer.sprite = Resources.Load<Sprite>("Items/" + type);
+            itemObj.transform.SetParent(GameObject.FindGameObjectWithTag("Map").transform);
             itemObj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
 
             const float DEFAULT_BUFF_TIMEOUT_S = 10.0f;

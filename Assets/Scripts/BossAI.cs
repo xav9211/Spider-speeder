@@ -29,7 +29,7 @@ namespace Assets.Scripts {
 				float angle = i / life * 360.0f;
 
 				Transform btnTransform = buttonObj.transform;
-				btnTransform.parent = transform;
+			    btnTransform.SetParent(transform);
 				btnTransform.localScale = btnTransform.lossyScale;
 
 				Vector2 pos = new Vector2 (Mathf.Cos((angle + 90.0f) * Mathf.Deg2Rad), 

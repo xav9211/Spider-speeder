@@ -19,6 +19,7 @@ namespace Assets.Scripts {
             var explosion = (GameObject)GameObject.Instantiate(Resources.Load("Explosion"),
                                                                new Vector3(position.x, position.y),
                                                                Quaternion.identity);
+            explosion.transform.SetParent(GameObject.FindGameObjectWithTag("Map").transform);
 
             ParticleSystem system = explosion.GetComponent<ParticleSystem>();
             short numParticles = (short) MathUtils.ScaleToRange(force, 15.0f, 100.0f);
