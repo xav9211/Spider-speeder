@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -261,23 +262,25 @@ namespace Assets.Scripts.Map {
         private static Dictionary<Tile.Type, List<GameObject>> LoadTilesets() {
             Dictionary<Tile.Type, List<GameObject>> tilesets = new Dictionary<Tile.Type, List<GameObject>>();
 
-            foreach (GameObject tilesetObject in GameObject.FindGameObjectsWithTag("Tileset")) {
-                Tile.Type type;
-                try {
-                    type = (Tile.Type) Enum.Parse(typeof (Tile.Type), tilesetObject.name);
-                }
-                catch (ArgumentException) {
-                    Debug.LogWarningFormat("{0} is not a valid Tile.Type; either add Tile.Type enum value "
-                                           + "with that name or remove the 'Tileset' tag from the object",
-                                           tilesetObject.name);
-                    continue;
+            foreach (Tile.Type tilesetType in (Tile.Type[])Enum.GetValues(typeof(Tile.Type))) {
+                DirectoryInfo tilesetDir = new DirectoryInfo("Assets/Resources/Tiles/" + tilesetType);
+                List<GameObject> tileset = new List<GameObject>();
+
+                foreach (FileInfo tileImage in tilesetDir.GetFiles("*.*")) {
+                    if (!tileImage.Name.EndsWith(".meta")) {
+                        string gameObjectResourcePath = "Tiles/" + tilesetType;
+                        string imgResourcePath = "Tiles/" + tilesetType + "/" + Path.GetFileNameWithoutExtension(tileImage.Name);
+
+                        GameObject obj = Instantiate(Resources.Load<GameObject>(gameObjectResourcePath));
+                        obj.name = tilesetType.ToString();
+                        obj.hideFlags = HideFlags.HideInHierarchy;
+                        obj.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(imgResourcePath);
+
+                        tileset.Add(obj);
+                    }
                 }
 
-                List<GameObject> tileset = new List<GameObject>();
-                for (int tileIdx = 0; tileIdx < tilesetObject.transform.childCount; ++tileIdx) {
-                    tileset.Add(tilesetObject.transform.GetChild(tileIdx).gameObject);
-                }
-                tilesets.Add(type, tileset);
+                tilesets.Add(tilesetType, tileset);
             }
             return tilesets;
         }
@@ -301,32 +304,42 @@ namespace Assets.Scripts.Map {
             mapSize = new Point2i(110, 110);
             tiles = Generate(rng, mapSize.x, mapSize.y);
 
-			GameObject.Instantiate(Resources.Load<Object>("Boss"),
-				new Vector3(exitPos.x, exitPos.y , 0.0f),
-				Quaternion.identity);
-			
+            GameObject tilesObj = new GameObject("Tiles");
+            GameObject enemiesObj = new GameObject("Enemies");
+            GameObject decorationsObj = new GameObject("Decorations");
+
+			GameObject bossObj = (GameObject)Instantiate(Resources.Load<Object>("Boss"),
+                                                         new Vector3(exitPos.x, exitPos.y , 0.0f),
+                                                         Quaternion.identity);
+            bossObj.transform.parent = enemiesObj.transform;
+
             for (int y = 0; y < mapSize.y; ++y) {
                 for (int x = 0; x < mapSize.x; ++x) {
                     Tile tile = tiles[x, y];
-                    GameObject.Instantiate(tilesets[tile.type].Random(rng),
-                                           new Vector3(x, y, 0.0f),
-                                           Quaternion.identity);
+                    GameObject tileObj = (GameObject)Instantiate(tilesets[tile.type].Random(rng),
+                                                                 new Vector3(x, y, 0.0f),
+                                                                 Quaternion.identity);
+                    tileObj.transform.parent = tilesObj.transform;
+
                     if (tile.type == Tile.Type.Chamber && rng.Next(100) < 2 + level && 
 						!startChamber.Contains(new Point2i(x, y)) &&
 						!exitChamber.Contains(new Point2i(x, y)))
                     {
-						var creature = (GameObject)GameObject.Instantiate(Resources.Load<Object>("Enemy"),
-																		  new Vector3(x, y, 0.0f),
-																		  Quaternion.identity);
+						var creature = (GameObject)Instantiate(Resources.Load<Object>("Enemy"),
+															   new Vector3(x, y, 0.0f),
+															   Quaternion.identity);
+                        creature.transform.parent = enemiesObj.transform;
+
 						var ai = (EnemyAI)creature.GetComponent("EnemyAI");
 						ai.createMonster (level, rng);
                     }
 
                     // TODO: place lights more intelligently
                     if (tile.type == Tile.Type.Chamber && rng.Next(100) < 1) {
-                        GameObject.Instantiate(Resources.Load<Object>("Fire"),
-                                               new Vector3(x, y, 0.0f),
-                                               Quaternion.identity);
+                        GameObject fireObj = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
+                                                                     new Vector3(x, y, 0.0f),
+                                                                     Quaternion.identity);
+                        fireObj.transform.parent = decorationsObj.transform;
                     }
                 }
             }
@@ -340,9 +353,10 @@ namespace Assets.Scripts.Map {
             Point2i spiderStartPos = GetSpiderStartPos();
 
             // TODO: this might place the light inside a wall
-            GameObject.Instantiate(Resources.Load<Object>("Fire"),
-                                   new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
-                                   Quaternion.identity);
+            GameObject fileObjBesidePlayer = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
+                                                                     new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
+                                                                     Quaternion.identity);
+            fileObjBesidePlayer.transform.parent = decorationsObj.transform;
 
             Player.StopMovement();
             Player.transform.position = new Vector3(spiderStartPos.x, spiderStartPos.y);
