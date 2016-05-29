@@ -7,6 +7,7 @@ namespace Assets.Scripts {
     public enum Statistic {
         MaxHealth,
         Damage,
+        WebSwingRange,
     }
 
     public class Buff {
