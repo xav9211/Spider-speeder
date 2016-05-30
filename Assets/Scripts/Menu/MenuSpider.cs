@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Assets.Scripts;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class MenuSpider : MonoBehaviour {
     private GameObject leg;
 
+    private Vector2 savedGravity;
     private float? targetAngle;
     private float? TargetAngle {
         get { return targetAngle; }
@@ -16,6 +19,7 @@ public class MenuSpider : MonoBehaviour {
 
     // Use this for initialization
 	void Start () {
+	    savedGravity = Physics2D.gravity;
 	    leg = transform.FindChild("BotLeftLeg").gameObject;
 	}
 
@@ -28,16 +32,43 @@ public class MenuSpider : MonoBehaviour {
         }
     }
 
+    void PointAt(string btnName) {
+        string btnPath = "/Canvas/MainMenu/LeftPane/" + btnName;
+
+        Transform bt = GameObject.Find(btnPath).transform;
+
+        Vector2 MAGIC_OFFSET = new Vector2(2.0f, -0.25f);
+        Vector2 targetPos = new Vector2(bt.position.x, bt.position.y) + MAGIC_OFFSET;
+
+        Vector3 legPos = leg.transform.position;
+        Vector2 dir = new Vector2(legPos.x, legPos.y) - targetPos;
+
+        float angle = (Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg + 450.0f) % 360.0f;
+        TargetAngle = angle;
+    }
+
     void PointAtNewGame() {
-        TargetAngle = 95.0f;
+        PointAt("ButtonContainer/NewGame");
+    }
+
+    void PointAtLoadSeed() {
+        PointAt("ButtonContainer/LoadSeed");
     }
 
     void PointAtHighScores() {
-        TargetAngle = 105.0f;
+        PointAt("ButtonContainer/HighScores");
     }
 
     void PointAtExit() {
-        TargetAngle = 115.0f;
+        PointAt("ButtonContainer/Exit");
+    }
+
+    void PointAtSeedInputLoad() {
+        PointAt("SeedInputPane/Load");
+    }
+
+    void PointAtSeedInputBack() {
+        PointAt("SeedInputPane/Back");
     }
 
     void PointAtNothing() {
@@ -45,6 +76,6 @@ public class MenuSpider : MonoBehaviour {
     }
 
     void OnDestroy() {
-        Physics2D.gravity = Vector2.zero;
+        Physics2D.gravity = savedGravity;
     }
 }
