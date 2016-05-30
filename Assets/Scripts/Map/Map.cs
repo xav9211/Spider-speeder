@@ -10,6 +10,8 @@ using Object = UnityEngine.Object;
 
 namespace Assets.Scripts.Map {
     public class Map: MonoBehaviour {
+        public static int initialSeed = 0;
+
         private Layout layout;
 		public Dictionary<Tile.Type, List<GameObject>> tilesets;
         private System.Random rng;
@@ -277,7 +279,7 @@ namespace Assets.Scripts.Map {
             tilesets = LoadTilesets();
 
             int level = 1;
-            int rngSeed = 0;
+            int rngSeed = initialSeed;
             Regenerate(level, rngSeed);
 
             AudioUtils.BackgroundMusic.Play();
