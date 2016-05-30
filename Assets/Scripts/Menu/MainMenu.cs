@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using Assets.Scripts;
 using Assets.Scripts.Map;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -20,11 +21,7 @@ public class MainMenu : MonoBehaviour {
 
     void LoadSeed() {
         GameObject textObj = GameObject.Find("/Canvas/MainMenu/LeftPane/SeedInputPane/InputField/Text");
-
-        int seed = 0;
-        Int32.TryParse(textObj.GetComponent<Text>().text, out seed);
-
-        Map.initialSeed = seed;
+        Map.initialSeed = HumanFriendlySeed.FromString(textObj.GetComponent<Text>().text);
         SceneManager.LoadScene("Game");
     }
 
