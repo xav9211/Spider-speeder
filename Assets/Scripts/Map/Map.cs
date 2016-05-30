@@ -10,6 +10,8 @@ using Object = UnityEngine.Object;
 
 namespace Assets.Scripts.Map {
     public class Map: MonoBehaviour {
+        public static HumanFriendlySeed initialSeed = new HumanFriendlySeed(0);
+
         private Layout layout;
 		public Dictionary<Tile.Type, List<GameObject>> tilesets;
         private System.Random rng;
@@ -23,8 +25,8 @@ namespace Assets.Scripts.Map {
             }
         }
 
-        private int levelSeed = -1;
-        public int LevelSeed {
+        private HumanFriendlySeed levelSeed = new HumanFriendlySeed(-1);
+        public HumanFriendlySeed LevelSeed {
             get { return levelSeed; }
             private set {
                 levelSeed = value;
@@ -246,10 +248,10 @@ namespace Assets.Scripts.Map {
         }
 
         internal void Regenerate(int level,
-                                 int? rngSeed = null) {
+                                 HumanFriendlySeed rngSeed = null) {
             Level = level;
-            LevelSeed = rngSeed ?? rng.Next();
-            rng = new System.Random(LevelSeed);
+            LevelSeed = rngSeed ?? new HumanFriendlySeed(rng.Next());
+            rng = new System.Random(LevelSeed.IntValue);
 
             ClearClones();
 
@@ -277,8 +279,7 @@ namespace Assets.Scripts.Map {
             tilesets = LoadTilesets();
 
             int level = 1;
-            int rngSeed = 0;
-            Regenerate(level, rngSeed);
+            Regenerate(level, initialSeed);
 
             AudioUtils.BackgroundMusic.Play();
         }
