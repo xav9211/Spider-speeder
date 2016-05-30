@@ -18,6 +18,9 @@ namespace Assets.Scripts {
 		protected float currentLife;
 		protected string damageSound;
 		protected Rigidbody2D rb;
+		protected bool canThrow = false;
+		protected float nextShoeTime = 0;
+		protected float throwingSpeed = 5;
         Color green = new Color(0.0f, 0.7f, 0.0f, 0.9f);
         Color yellow = new Color(0.7f, 0.7f, 0.0f, 0.9f);
         Color red = new Color(0.7f, 0.0f, 0.0f, 0.9f);
@@ -55,10 +58,14 @@ namespace Assets.Scripts {
             } else if (val >= 60 && val < 80) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/Przechwytywanie");
                 damageSound = "przechwytywanieDamage";
-            } else if (val >= 80 && val < 100) {
+            } else if (val >= 80 && val < 90) {
                 renderer.sprite = Resources.Load<Sprite> ("enemies/putin");
                 damageSound = "putinDamage";
-            }
+			} else if (val >= 90 && val < 100) {
+				renderer.sprite = Resources.Load<Sprite> ("enemies/grandma2");
+				canThrow = true;
+				damageSound = "putinDamage";
+			}
 
             currentLife = life;
 
@@ -83,7 +90,19 @@ namespace Assets.Scripts {
             PlayerControl spider = map.Player;
             if (spider != null && Vector3.Distance(spider.transform.position, transform.position) < 10)
             {
-                rb.velocity = (speed * Vector3.Normalize(spider.transform.position - transform.position));
+				Vector3 toPlayerDir = Vector3.Normalize (spider.transform.position - transform.position);
+				rb.velocity = (speed * toPlayerDir);
+				if (canThrow && Time.time > nextShoeTime) 
+				{
+					nextShoeTime = Time.time + throwingSpeed;
+					var shoe = Instantiate(Resources.Load<GameObject>("Bullet"),
+						new Vector3(transform.position.x, transform.position.y, 0.0f),
+						Quaternion.identity);
+
+					var bullet  = (BulletAI)((GameObject)shoe).GetComponent("BulletAI");
+					bullet.init(new Vector2(toPlayerDir.x, toPlayerDir.y), speed*3, damage);
+				}
+					
             } else
             {
                 rb.velocity = Vector2.zero;
