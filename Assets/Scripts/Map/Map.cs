@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -175,29 +176,72 @@ namespace Assets.Scripts.Map {
             }
         }
 
+        private int CountAdjacentTilesOfType(Tile[,] tiles,
+                                             Point2i pos,
+                                             Tile.Type type) {
+            int counter = 0;
+            for (int dx = -1; dx <= 1; ++dx) {
+                for (int dy = -1; dy <= 1; ++dy) {
+                    if (tiles[pos.x + dx, pos.y + dy].type == type) {
+                        ++counter;
+                    }
+                }
+            }
+            return counter;
+        }
+
+        private enum FiresLayout {
+            None,
+            Center,
+            Corners,
+            Exits,
+        }
+
+        private IList<Point2i> GenerateFiresPositions(Chamber chamber) {
+            switch (((FiresLayout[])Enum.GetValues(typeof(FiresLayout))).Random(rng)) {
+            case FiresLayout.None:
+                return new List<Point2i>();
+            case FiresLayout.Center:
+                return new List<Point2i> {chamber.center};
+            case FiresLayout.Corners:
+                int offset = rng.Next(1, 5);
+                return new List<Point2i> {
+                    new Point2i(chamber.left + offset, chamber.bottom + offset),
+                    new Point2i(chamber.left + offset, chamber.top - offset - 1),
+                    new Point2i(chamber.right - offset - 1, chamber.bottom + offset),
+                    new Point2i(chamber.right - offset - 1, chamber.top - offset - 1),
+                };
+            case FiresLayout.Exits:
+                IList<Point2i> fires = new List<Point2i>();
+                for (int x = chamber.left; x < chamber.right; ++x) {
+                    for (int y = chamber.bottom; y < chamber.top; ++y) {
+                        if (CountAdjacentTilesOfType(layout.Tiles, new Point2i(x, y), Tile.Type.Corridor) == 1) {
+                            fires.Add(new Point2i(x, y));
+                        }
+                    }
+                }
+                return fires;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        private void SpawnFires(GameObject parentObj) {
+            foreach (Chamber chamber in layout.Chambers) {
+                foreach (Point2i pos in GenerateFiresPositions(chamber)) {
+                    GameObject fireObj = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
+                                                                 new Vector3(pos.x, pos.y, 0.0f),
+                                                                 Quaternion.identity);
+                    fireObj.transform.SetParent(parentObj.transform);
+                }
+            }
+        }
+
         private void SpawnDecorations(Point2i spiderStartPos) {
             GameObject decorationsObj = new GameObject("Decorations");
             decorationsObj.transform.SetParent(transform);
             
-            for (int y = 0; y < layout.MapSize.y; ++y) {
-                for (int x = 0; x < layout.MapSize.x; ++x) {
-                    Tile tile = layout.Tiles[x, y];
-                    // TODO: place lights more intelligently
-                    if (tile.type == Tile.Type.Chamber && rng.Next(100) < 1) {
-                        GameObject fireObj = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
-                                                                     new Vector3(x, y, 0.0f),
-                                                                     Quaternion.identity);
-                        fireObj.transform.SetParent(decorationsObj.transform);
-                    }
-                }
-            }
-
-            // TODO: this might place the light inside a wall
-            GameObject fireObjBesidePlayer = (GameObject)Instantiate(Resources.Load<Object>("Fire"),
-                                                                     new Vector3(spiderStartPos.x + 2, spiderStartPos.y, 0.0f),
-                                                                     Quaternion.identity);
-            fireObjBesidePlayer.transform.SetParent(decorationsObj.transform);
-
+            SpawnFires(decorationsObj);
             SpawnCornerWebs(decorationsObj);
         }
 
