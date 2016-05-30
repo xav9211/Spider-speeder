@@ -10,6 +10,8 @@ namespace Assets.Scripts.Map {
         public int right { get { return left + width; } }
         public int top { get { return bottom + height; } }
 
+        public int area { get { return width*height; } }
+
         public Point2i center {
             get { return new Point2i(left + width / 2, bottom + height / 2); }
         }
