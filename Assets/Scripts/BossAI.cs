@@ -16,7 +16,7 @@ namespace Assets.Scripts {
 		public void initialize (int level, System.Random rngg){
 			rng = rngg;
 			speed = rng.Next (2 * level + 2, 3 * level + 1);
-			damage = rng.Next (20 * level, 30 * level);
+		    damage = MathUtils.ScaleToRange(level - 1, 20.0f, 50.0f);//rng.Next (20 * level, 30 * level));
 			life = 2.0F * level;
 			currentLife = life;
 

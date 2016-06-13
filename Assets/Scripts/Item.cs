@@ -1,6 +1,7 @@
 ﻿using System;
 using Assets.Scripts.Map;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using Object = UnityEngine.Object;
 
 namespace Assets.Scripts {
@@ -14,6 +15,7 @@ namespace Assets.Scripts {
             WebSwingRangeBonus,
             WebSwingRangeInfinite,
             WebSwingRangeHalf,
+            EnableRotation,
         }
 
         public static GameObject CreateRandom(Vector3 position) {
@@ -31,8 +33,10 @@ namespace Assets.Scripts {
             Item item = itemObj.GetComponent<Item>();
 
             renderer.sprite = Resources.Load<Sprite>("Items/" + type);
-            itemObj.transform.SetParent(GameObject.FindGameObjectWithTag("Map").transform);
-            itemObj.transform.localScale = new Vector3(0.5f, 0.5f, 1.0f);
+            GameObject mapObj = GameObject.FindGameObjectWithTag("Map");
+            Map.Map map = mapObj.GetComponent<Map.Map>();
+            itemObj.transform.SetParent(mapObj.transform);
+            itemObj.transform.localScale = new Vector3(0.65f, 0.65f, 1.0f);
 
             const float DEFAULT_BUFF_TIMEOUT_S = 10.0f;
 
@@ -75,7 +79,8 @@ namespace Assets.Scripts {
             case Type.WebSwingRangeInfinite:
                 item.ApplyBuff = new Buff(Statistic.WebSwingRange,
                                           Buff.Type.Additive,
-                                          1000000.0f, // good approximation of infinity
+                                          1000000.0f,
+                                          // good approximation of infinity
                                           DEFAULT_BUFF_TIMEOUT_S,
                                           "Items/WebSwingRangeInfinite");
                 break;
@@ -86,6 +91,9 @@ namespace Assets.Scripts {
                                           DEFAULT_BUFF_TIMEOUT_S,
                                           "Items/WebSwingRangeHalf");
                 break;
+            case Type.EnableRotation:
+                item.ApplyEffect = new EnableRotationEffect(map);
+                break;
             }
 
             return itemObj;
@@ -95,6 +103,7 @@ namespace Assets.Scripts {
 
         public float? RestoreHealth;
         public Buff ApplyBuff;
+        public Effect ApplyEffect;
         public float? ExplosionForce;
 
         public Vector3 Position {
@@ -102,15 +111,16 @@ namespace Assets.Scripts {
         }
 
         // Use this for initialization
-        void Start () {
+        void Start() {
             map = GameObject.FindGameObjectWithTag("Map").GetComponent<Map.Map>();
         }
-	
+
         // Update is called once per frame
-        void Update () {
+        void Update() {
             if (map.Player && map.Player.SelectedItem == this) {
                 GetComponentInChildren<Light>().enabled = true;
-            } else {
+            }
+            else {
                 GetComponentInChildren<Light>().enabled = false;
             }
         }
