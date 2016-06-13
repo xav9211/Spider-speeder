@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Assets.Scripts {
@@ -39,14 +41,22 @@ namespace Assets.Scripts {
     }
 
     public class EffectContainer: MonoBehaviour {
+        private List<Effect> activeEffects = new List<Effect>();
+
         private IEnumerator UnapplyAfter(Effect effect) {
             yield return new WaitForSeconds(effect.Timeout);
             //print("destroying buff: " + buff.stat + ", " + buff.type + ", " + buff.value + " for " + buff.timeout);
-            StartCoroutine(effect.Unapply());
-        }
+            activeEffects.Remove(effect);
+
+            // TODO: there's only one effect type for now...
+            if (activeEffects.Count == 0) {
+                StartCoroutine(effect.Unapply());
+            }
+    }
 
         public void Add(Effect effect) {
             effect.Apply();
+            activeEffects.Add(effect);
 
             // weird way to schedule something to be done after a delay
             // http://answers.unity3d.com/questions/897095/workaround-for-using-invoke-for-methods-with-param.html
