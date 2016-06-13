@@ -379,6 +379,11 @@ namespace Assets.Scripts {
                     controlSchemes[1].MoveLeg(legs[Legs.BotRight], axesMapping[1].RightLeg.Delta);
                 }
             }
+
+            legs[Legs.TopLeft].ResetJoint();
+            legs[Legs.TopRight].ResetJoint();
+            legs[Legs.BotLeft].ResetJoint();
+            legs[Legs.BotRight].ResetJoint();
         }
 
         void WebControl(KeyCode key, LegData leg) {
