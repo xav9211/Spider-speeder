@@ -43,7 +43,7 @@ namespace Assets.Scripts {
         public float currentAngle; // added because in unity angle 361degrees is saved as 1 degree (361 number is relevant)
         public bool swingCollision = false;
         public float height = 0.5F; //leg size
-        public float maxFrameDeltaAngle = 5.0F; // by how many degrees can leg change in single frame
+        public float maxFrameDeltaAngle = 15.0F; // by how many degrees can leg change in single frame
 
         public readonly float startMaxRange; // beggining value (in degrees) of maximum possible range
         public readonly float arctanRotation; //rotation value (in degrees) which should be performed for proper arctan values
@@ -194,6 +194,7 @@ namespace Assets.Scripts {
         Dictionary<Legs, LegData> legs;
 
         private BuffStack buffs;
+        private EffectContainer effects;
 
         public Vector3 Position { get { return transform.position; } }
 
@@ -245,10 +246,12 @@ namespace Assets.Scripts {
         // Use this for initialization
         void Start() {
             AttachCamera();
+            AudioUtils.BackgroundMusic.Play();
             gameOverOverlay = GameObject.FindGameObjectWithTag("GameOverOverlay");
             gameOverOverlay.SetActive(false);
 
             buffs = GetComponent<BuffStack>();
+            effects = GetComponent<EffectContainer>();
 
             BaseDamage = 50.0f;
             BaseMaxHealth = 100.0f;
@@ -322,6 +325,9 @@ namespace Assets.Scripts {
             }
             if (item.ApplyBuff != null) {
                 buffs.Add(item.ApplyBuff);
+            }
+            if (item.ApplyEffect != null) {
+                effects.Add(item.ApplyEffect);
             }
         }
 

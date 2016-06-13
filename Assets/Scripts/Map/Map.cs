@@ -280,8 +280,6 @@ namespace Assets.Scripts.Map {
 
             int level = 1;
             Regenerate(level, initialSeed);
-
-            AudioUtils.BackgroundMusic.Play();
         }
 
         // Update is called once per frame
